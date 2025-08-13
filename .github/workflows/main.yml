@@ -19,11 +19,8 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Install Cordova
+      - name: Install Cordova Globally
         run: npm install -g cordova
-
-      - name: Install Project Dependencies
-        run: npm install
 
       - name: Add Android Platform
         run: cordova platform add android
