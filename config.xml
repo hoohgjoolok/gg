@@ -7,39 +7,22 @@
   <author email="dev@example.com">Cordova Developer</author>
   <content src="index.html" />
   <access origin="*" />
-  <preference name="android-targetSdkVersion" value="29" />
-  <preference name="android-minSdkVersion" value="22" />
-  <preference name="KeepRunning" value="true" />
-  
-  <!-- Plugins الأساسية -->
-  <plugin name="cordova-plugin-whitelist" spec="1" />
-  <plugin name="cordova-plugin-geolocation" spec="4.1.0" />
-  <plugin name="cordova-plugin-sms" spec="1.0.5" />
-  <plugin name="cordova-plugin-file" spec="6.0.2" />
-  <plugin name="cordova-plugin-file-transfer" spec="1.7.1" />
-  <plugin name="cordova-plugin-android-permissions" spec="1.1.3" />
-  <plugin name="cordova-plugin-background-mode" spec="0.7.3" />
-  <plugin name="cordova-plugin-camera" spec="4.1.0" />
-  
+  <preference name="android-targetSdkVersion" value="34" />
   <platform name="android">
-    <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest/application">
-      <application android:usesCleartextTraffic="true">
-        <service android:name="org.apache.cordova.background.BackgroundPlugin$BackgroundService" />
-      </application>
+    <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest">
+      <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+        <!-- الأذونات الأساسية -->
+        <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+        <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+        <uses-permission android:name="android.permission.SEND_SMS" />
+        
+        <!-- أذونات إضافية للميزات الجديدة -->
+        <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+        <uses-permission android:name="android.permission.READ_SMS" />
+        <uses-permission android:name="android.permission.RECEIVE_SMS" />
+        <uses-permission android:name="android.permission.CAMERA" />
+        <uses-permission android:name="android.permission.INTERNET" />
+      </manifest>
     </edit-config>
-    
-    <config-file parent="/*" target="AndroidManifest.xml">
-      <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-      <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-      <uses-permission android:name="android.permission.SEND_SMS" />
-      <uses-permission android:name="android.permission.READ_SMS" />
-      <uses-permission android:name="android.permission.RECEIVE_SMS" />
-      <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-      <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-      <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-      <uses-permission android:name="android.permission.INTERNET" />
-      <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-      <uses-permission android:name="android.permission.WAKE_LOCK" />
-    </config-file>
   </platform>
 </widget>
