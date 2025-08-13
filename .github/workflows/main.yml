@@ -27,8 +27,8 @@ jobs:
 
       - name: Install Cordova Plugins
         run: |
-          cordova plugin add cordova-plugin-permissions
-          cordova plugin add cordova-plugin-sms
+          cordova plugin add cordova-plugin-android-permissions
+          cordova plugin add cordova-sms-plugin
 
       - name: Build APK
         run: cordova build android --release
