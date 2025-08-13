@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.example.helloworld" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+  <name>CordovaApp</name>
+  <description>
+    مثال على تطبيق Cordova يطلب أذونات الملفات وSMS.
+  </description>
+  <author email="dev@example.com">Cordova Developer</author>
+  <content src="index.html" />
+  <access origin="*" />
+  <preference name="android-targetSdkVersion" value="33" />
+  <platform name="android">
+    <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest/uses-permission">
+      <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+      <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+      <uses-permission android:name="android.permission.SEND_SMS" />
+    </edit-config>
+  </platform>
+</widget>
