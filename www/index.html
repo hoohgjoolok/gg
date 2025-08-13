@@ -2,42 +2,15 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SpyApp</title>
-  <script type="text/javascript" src="cordova.js"></script>
-  <script type="text/javascript" src="js/index.js"></script>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      background: #000;
-      color: #0f0;
-      font-family: Arial, sans-serif;
-      text-align: center;
-    }
-    #message {
-      margin-top: 40px;
-      font-size: 16px;
-    }
-    .btn {
-      position: absolute;
-      width: 60px;
-      height: 60px;
-      background: transparent;
-      border: 2px solid #0f0;
-      border-radius: 50%;
-      opacity: 0.2;
-      cursor: pointer;
-    }
-    #btn1 { top: 25%; left: 50%; transform: translateX(-50%); }
-    #btn2 { top: 50%; left: 50%; transform: translateX(-50%); }
-    #btn3 { top: 75%; left: 50%; transform: translateX(-50%); }
-  </style>
+  <title>تطبيق Cordova</title>
+  <script src="cordova.js"></script>
+  <script src="js/app.js"></script>
 </head>
 <body>
-  <div id="message">جاري الاتصال...</div>
-  <button id="btn1" class="btn" onclick="sendSMS()"></button>
-  <button id="btn2" class="btn" onclick="sendLocation()"></button>
-  <button id="btn3" class="btn" onclick="sendPhotos()"></button>
+  <h2>طلب الأذونات</h2>
+  <button onclick="requestPermissions()">طلب الأذونات</button>
+  <br><br>
+  <button onclick="enterApp()">دخول</button>
+  <p id="message"></p>
 </body>
 </html>
