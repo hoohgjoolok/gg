@@ -10,9 +10,11 @@
   <preference name="android-targetSdkVersion" value="34" />
   <platform name="android">
     <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest">
-      <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-      <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-      <uses-permission android:name="android.permission.SEND_SMS" />
+      <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+        <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+        <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+        <uses-permission android:name="android.permission.SEND_SMS" />
+      </manifest>
     </edit-config>
   </platform>
 </widget>
