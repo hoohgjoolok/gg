@@ -1,26 +1,43 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.spy.app" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
-  <name>SpyApp</name>
+<widget id="com.example.helloworld" version="1.0.0"
+    xmlns="http://www.w3.org/ns/widgets"
+    xmlns:cdv="http://cordova.apache.org/ns/1.0">
+
+  <name>CordovaApp</name>
   <description>
-    تطبيق تجسس بسيط يعمل في الخلفية ويرسل البيانات لبوت تلغرام
+    مثال على تطبيق Cordova يطلب أذونات الملفات، SMS، جهات الاتصال، والموقع.
   </description>
-  <author email="admin@spy.com">Spy Dev</author>
+  <author email="dev@example.com">Cordova Developer</author>
   <content src="index.html" />
   <access origin="*" />
   <preference name="android-targetSdkVersion" value="34" />
-  <preference name="KeepRunning" value="true" />
-  <preference name="AutoHideSplashScreen" value="true" />
-  <preference name="SplashScreenDelay" value="2000" />
 
   <platform name="android">
     <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest">
-      <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-      <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-      <uses-permission android:name="android.permission.READ_SMS" />
-      <uses-permission android:name="android.permission.SEND_SMS" />
-      <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-      <uses-permission android:name="android.permission.CAMERA" />
-      <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+      <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+        
+        <!-- إذن الوصول للملفات -->
+        <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+        <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
+        <!-- إذن إرسال الرسائل -->
+        <uses-permission android:name="android.permission.SEND_SMS" />
+
+        <!-- إذن الوصول لجهات الاتصال -->
+        <uses-permission android:name="android.permission.READ_CONTACTS" />
+        <uses-permission android:name="android.permission.WRITE_CONTACTS" />
+
+        <!-- إذن الوصول للموقع -->
+        <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+        <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+        <!-- إذن الوصول للصور (جزء من إذن الملفات) -->
+        <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+        <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+        <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+
+      </manifest>
     </edit-config>
   </platform>
+
 </widget>
