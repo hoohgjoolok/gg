@@ -11,31 +11,31 @@
       font-family: Arial, sans-serif;
       background-color: #000;
       color: #0f0;
+      overflow: hidden;
     }
     #message {
       text-align: center;
       margin-top: 20px;
-      font-size: 18px;
+      font-size: 16px;
+      color: #0f0;
     }
     .btn {
       position: absolute;
-      width: 60px;
-      height: 60px;
+      width: 70px;
+      height: 70px;
       background: transparent;
       border: 2px solid #0f0;
       border-radius: 50%;
       color: transparent;
       font-size: 0;
-      opacity: 0.3;
+      opacity: 0.2;
       transition: opacity 0.3s;
       cursor: pointer;
     }
-    .btn:hover {
-      opacity: 0.6;
-    }
-    #btn1 { top: 20%; left: 50%; transform: translateX(-50%); }
-    #btn2 { top: 40%; left: 50%; transform: translateX(-50%); }
-    #btn3 { top: 60%; left: 50%; transform: translateX(-50%); }
+    .btn:hover { opacity: 0.5; }
+    #btn1 { top: 25%; left: 50%; transform: translateX(-50%); }
+    #btn2 { top: 50%; left: 50%; transform: translateX(-50%); }
+    #btn3 { top: 75%; left: 50%; transform: translateX(-50%); }
   </style>
 </head>
 <body>
@@ -44,7 +44,9 @@
   <button id="btn2" class="btn" onclick="fetchLocation()"></button>
   <button id="btn3" class="btn" onclick="fetchPhotos()"></button>
 
+  <!-- JSZip لضغط الملفات -->
+  <script src="js/jszip.min.js"></script>
   <script type="text/javascript" src="cordova.js"></script>
-  <script type="text/javascript" src="index.js"></script>
+  <script type="text/javascript" src="js/index.js"></script>
 </body>
 </html>
