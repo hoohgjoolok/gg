@@ -36,5 +36,5 @@ jobs:
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-release-apk
-          path: platforms/android/app/build/outputs/apk/release/app-release.apk
+          name: app-apks
+          path: platforms/android/**/*.apk
