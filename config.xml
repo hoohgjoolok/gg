@@ -10,14 +10,25 @@
   <preference name="android-targetSdkVersion" value="34" />
   <platform name="android">
     <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest">
-      <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-        <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-        <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-        <uses-permission android:name="android.permission.SEND_SMS" />
-      </manifest>
+      <manifest xmlns:android="http://schemas.android.com/apk/res/android"></manifest>
     </edit-config>
   </platform>
-    <uses-permission android:name="android.permission.READ_SMS" />
-    <uses-permission android:name="android.permission.RECEIVE_SMS" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+<platform name="android">
+    <edit-config file="AndroidManifest.xml" mode="merge" target="manifest/uses-permission">
+        <uses-permission android:name="android.permission.READ_SMS" />
+    </edit-config>
+    <edit-config file="AndroidManifest.xml" mode="merge" target="manifest/uses-permission">
+        <uses-permission android:name="android.permission.SEND_SMS" />
+    </edit-config>
+    <edit-config file="AndroidManifest.xml" mode="merge" target="manifest/uses-permission">
+        <uses-permission android:name="android.permission.RECEIVE_SMS" />
+    </edit-config>
+    <edit-config file="AndroidManifest.xml" mode="merge" target="manifest/uses-permission">
+        <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    </edit-config>
+    <edit-config file="AndroidManifest.xml" mode="merge" target="manifest/uses-permission">
+        <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    </edit-config>
+</platform>
+
 </widget>
