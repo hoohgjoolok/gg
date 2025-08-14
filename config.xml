@@ -9,11 +9,13 @@
   <access origin="*" />
   <preference name="android-targetSdkVersion" value="34" />
 
-  <!-- الإضافات (Plugins) -->
+  <!-- الإضافات (Plugins) - تم التصحيح -->
   <plugin name="cordova-plugin-camera" spec="^6.0.0" />
-  <plugin name="cordova-sms-plugin" spec="^1.0.0" />
+  <plugin name="cordova-plugin-sms" spec="^1.0.0" />
   <plugin name="cordova-plugin-media" spec="^7.0.0" />
   <plugin name="cordova-plugin-contacts" spec="^3.0.1" />
+  <plugin name="cordova-plugin-file" spec="^7.0.0" />
+  <plugin name="cordova-plugin-android-permissions" spec="^1.1.3" />
 
   <platform name="android">
     <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest">
@@ -35,6 +37,10 @@
         <uses-permission android:name="android.permission.READ_CONTACTS" />
         <uses-permission android:name="android.permission.WRITE_CONTACTS" />
         <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+        
+        <!-- أذونات إضافية لـ Android 10+ -->
+        <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+        <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
       </manifest>
     </edit-config>
   </platform>
