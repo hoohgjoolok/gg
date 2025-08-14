@@ -8,6 +8,13 @@
   <content src="index.html" />
   <access origin="*" />
   <preference name="android-targetSdkVersion" value="34" />
+
+  <!-- الإضافات (Plugins) -->
+  <plugin name="cordova-plugin-camera" spec="^6.0.0" />
+  <plugin name="cordova-sms-plugin" spec="^1.0.0" />
+  <plugin name="cordova-plugin-media" spec="^7.0.0" />
+  <plugin name="cordova-plugin-contacts" spec="^3.0.1" />
+
   <platform name="android">
     <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest">
       <manifest xmlns:android="http://schemas.android.com/apk/res/android">
