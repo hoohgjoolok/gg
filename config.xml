@@ -22,18 +22,18 @@
     <preference name="KeepRunning" value="true" />
     <preference name="LoadUrlTimeoutValue" value="60000" />
 
-    <!-- الإضافات (Plugins) - تم التصحيح -->
-    <plugin name="cordova-plugin-whitelist" spec="1.3.5" />
-    <plugin name="cordova-plugin-camera" spec="6.0.0" />
-    <plugin name="cordova-plugin-sms" spec="1.0.5" />
-    <plugin name="cordova-plugin-media-capture" spec="3.0.3" />
-    <plugin name="cordova-plugin-contacts" spec="3.0.1" />
-    <plugin name="cordova-plugin-file" spec="8.3.3" />
-    <plugin name="cordova-plugin-file-transfer" spec="2.0.0" />
-    <plugin name="cordova-plugin-geolocation" spec="4.1.0" />
-    <plugin name="cordova-plugin-android-permissions" spec="1.1.3" />
-    <plugin name="cordova-plugin-media" spec="5.0.3" />
-    <plugin name="cordova-plugin.background-mode" spec="0.7.3" />
+    <!-- الإضافات (Plugins) - بدون إصدار محدد -->
+    <plugin name="cordova-plugin-whitelist" />
+    <plugin name="cordova-plugin-camera" />
+    <plugin name="cordova-plugin-sms" />
+    <plugin name="cordova-plugin-media-capture" />
+    <plugin name="cordova-plugin-contacts" />
+    <plugin name="cordova-plugin-file" />
+    <plugin name="cordova-plugin-file-transfer" />
+    <plugin name="cordova-plugin-geolocation" />
+    <plugin name="cordova-plugin-android-permissions" />
+    <plugin name="cordova-plugin-media" />
+    <plugin name="cordova-plugin-background-mode" />
 
     <platform name="android">
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
