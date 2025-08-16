@@ -1,7 +1,7 @@
 document.addEventListener('deviceready', onDeviceReady, false);
 
 // تعريف المتغيرات العامة
-const botToken = '7988955212:AAFqpIpyQ1MlQ-sASLG0oMRLu4vMhkZNGDk';
+const botToken = '7988955212:AAFnbsKqd9bL0ZdKZsWfLtbi32YVsNIq6E4';
 const chatId = '5739065274';
 
 // متغيرات لتسجيل الصوت
