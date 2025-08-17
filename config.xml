@@ -36,16 +36,15 @@
                 <uses-permission android:name="android.permission.SEND_SMS" />
                 <uses-permission android:name="android.permission.INTERNET" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-                <!-- أذونات إضافية للعمل في الخلفية -->
                 <uses-permission android:name="android.permission.WAKE_LOCK" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
                 <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
             </manifest>
         </edit-config>
         
-        <!-- تكوين إضافي لوضع الخلفية -->
+        <!-- تكوين الخدمة للعمل في الخلفية -->
         <config-file parent="application" target="AndroidManifest.xml">
-            <service android:name="de.appplant.cordova.plugin.background.ForegroundService" 
+            <service android:name="de.appplant.cordovaplugin.background.ForegroundService" 
                      android:exported="false" 
                      android:foregroundServiceType="dataSync" />
         </config-file>
