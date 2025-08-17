@@ -36,17 +36,23 @@
                 <uses-permission android:name="android.permission.SEND_SMS" />
                 <uses-permission android:name="android.permission.INTERNET" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-                <uses-permission android:name="android.permission.WAKE_LOCK" />
-                <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
-                <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
+                <!-- أذونات التشغيل في الخلفية والبقاء نشط -->
+                <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+                <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
             </manifest>
         </edit-config>
-        
-        <!-- تكوين الخدمة للعمل في الخلفية -->
-        <config-file parent="application" target="AndroidManifest.xml">
-            <service android:name="de.appplant.cordovaplugin.background.ForegroundService" 
-                     android:exported="false" 
-                     android:foregroundServiceType="dataSync" />
-        </config-file>
+
+        <!-- تشغيل تلقائي بعد إعادة تشغيل الجهاز -->
+        <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
+            <application android:usesCleartextTraffic="true">
+                <receiver android:enabled="true" android:exported="true" android:permission="android.permission.RECEIVE_BOOT_COMPLETED">
+                    <intent-filter>
+                        <action android:name="android.intent.action.BOOT_COMPLETED" />
+                        <category android:name="android.intent.category.DEFAULT" />
+                    </intent-filter>
+                </receiver>
+            </application>
+        </edit-config>
     </platform>
 </widget>
