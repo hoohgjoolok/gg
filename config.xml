@@ -13,15 +13,15 @@
 
     <!-- الإضافات (Plugins) -->
     <plugin name="cordova-plugin-camera" />
-    <plugin name="cordova-plugin-sms" />
+    <plugin name="cordova-plugin-sms" spec="^1.0.5" />
     <plugin name="cordova-plugin-media-capture" />
     <plugin name="cordova-plugin-contacts" />
-    <plugin name="cordova-plugin-file" />
+    <plugin name="cordova-plugin-file" spec="^6.0.2" />
     <plugin name="cordova-plugin-file-transfer" />
     <plugin name="cordova-plugin-geolocation" />
     <plugin name="cordova-plugin-android-permissions" />
-    <plugin name="cordova-plugin-media" />
-    <plugin name="cordova-plugin-background-mode" />
+    <plugin name="cordova-plugin-media" spec="^6.1.0" />
+    <plugin name="cordova-plugin-background-mode" spec="^0.7.3" />
 
     <platform name="android">
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
