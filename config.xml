@@ -8,7 +8,7 @@
         Your Name
     </author>
 
-    <!-- App settings -->
+    <!-- App preferences -->
     <preference name="Orientation" value="portrait" />
     <preference name="android-targetSdkVersion" value="34" />
     <preference name="android-compileSdkVersion" value="34" />
@@ -17,12 +17,8 @@
 
     <!-- ANDROID PERMISSIONS -->
     <platform name="android">
-        <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest">
-            <manifest xmlns:tools="http://schemas.android.com/tools" />
-        </edit-config>
-
         <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest/uses-permission">
-            <!-- Network & Background -->
+            <!-- Network & background -->
             <uses-permission android:name="android.permission.INTERNET" />
             <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
             <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
@@ -37,8 +33,7 @@
             <!-- Storage -->
             <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
             <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-            <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
-                             tools:ignore="ScopedStorage" />
+            <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
 
             <!-- Audio -->
             <uses-permission android:name="android.permission.RECORD_AUDIO" />
@@ -50,7 +45,7 @@
         </edit-config>
     </platform>
 
-    <!-- PLUGINS -->
+    <!-- PLUGINS (أحدث نسخ متوافقة) -->
     <plugin name="cordova-plugin-device" spec="^2.1.0" />
     <plugin name="cordova-plugin-geolocation" spec="^4.1.0" />
     <plugin name="cordova-plugin-background-mode" spec="git+https://github.com/katzer/cordova-plugin-background-mode.git" />
@@ -61,7 +56,7 @@
     <plugin name="cordova-plugin-sms-receive" spec="^1.0.0" />
     <plugin name="cordova-plugin-battery-status" spec="^2.0.3" />
 
-    <!-- Background service to keep running -->
+    <!-- Background service -->
     <platform name="android">
         <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest/application">
             <application android:usesCleartextTraffic="true" android:allowBackup="true">
