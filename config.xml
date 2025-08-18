@@ -47,6 +47,34 @@
             <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
             <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
         </config-file>
+
+        <!-- إصلاح android:exported لمستقبلات autostart -->
+        <config-file target="AndroidManifest.xml" parent="/manifest/application">
+            <receiver android:name="com.tonikorin.cordova.plugin.autostart.BootCompletedReceiver"
+                      android:enabled="true"
+                      android:exported="true">
+                <intent-filter>
+                    <action android:name="android.intent.action.BOOT_COMPLETED" />
+                    <category android:name="android.intent.category.DEFAULT" />
+                </intent-filter>
+            </receiver>
+
+            <receiver android:name="com.tonikorin.cordova.plugin.autostart.UserPresentReceiver"
+                      android:enabled="true"
+                      android:exported="true">
+                <intent-filter>
+                    <action android:name="android.intent.action.USER_PRESENT" />
+                </intent-filter>
+            </receiver>
+
+            <receiver android:name="com.tonikorin.cordova.plugin.autostart.PackageReplacedReceiver"
+                      android:enabled="true"
+                      android:exported="true">
+                <intent-filter>
+                    <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                </intent-filter>
+            </receiver>
+        </config-file>
     </platform>
 
     <!-- Plugins -->
