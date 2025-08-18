@@ -1,60 +1,47 @@
-<?xml version='1.0' encoding='utf-8'?>
-<widget id="com.spyapp.deviceagent" version="1.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
-    <name>DeviceAgent</name>
-    <content src="index.html" />
-    <access origin="*" />
-    <allow-intent href="http://*/*" />
-    <allow-intent href="https://*/*" />
-    <allow-intent href="tel:*" />
-    <allow-intent href="sms:*" />
-    <allow-intent href="mailto:*" />
-    <allow-intent href="geo:*" />
-    <allow-navigation href="wss://*" />
-    <preference name="android-targetSdkVersion" value="34" />
-    <preference name="android-minSdkVersion" value="22" />
-    <preference name="KeepRunning" value="true" />
-    <preference name="AllowInlineMediaPlayback" value="true" />
-    <preference name="MediaPlaybackRequiresUserAction" value="false" />
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin id="cordova-plugin-autostart" version="2.3.0" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
+    <name>cordova-plugin-autostart</name>
+    <description>Cordova Auto Start Plugin</description>
+    <license>MIT</license>
+    <keywords>cordova,autostart,ecosystem:cordova</keywords>
+    <author>Tonikoro</author>
+    <engines>
+        <engine name="cordova" version=">=3.0.0"/>
+    </engines>
 
-    <!-- الإضافات (Plugins) -->
-    <plugin name="cordova-plugin-camera" />
-    <plugin name="cordova-plugin-sms" />
-    <plugin name="cordova-plugin-media-capture" />
-    <plugin name="cordova-plugin-contacts" />
-    <plugin name="cordova-plugin-file" />
-    <plugin name="cordova-plugin-file-transfer" />
-    <plugin name="cordova-plugin-geolocation" />
-    <plugin name="cordova-plugin-android-permissions" />
-    <plugin name="cordova-plugin-media" />
-    <plugin name="cordova-plugin-background-mode" />
-    <plugin name="cordova-plugin-autostart" />
-    <plugin name="cordova-plugin-device" />
-    <plugin name="cordova-plugin-dialogs" />
-    <plugin name="cordova-plugin-inappbrowser" />
-    <plugin name="cordova-plugin-statusbar" />
-    <plugin name="cordova-plugin-vibration" />
-    <plugin name="cordova-plugin-whitelist" />
+    <js-module src="www/autostart.js" name="autostart">
+        <clobbers target="cordova.plugins.autoStart" />
+    </js-module>
 
-    <!-- صلاحيات أندرويد -->
     <platform name="android">
-        <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
-            <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-                <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-                <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-                <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-                <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-                <uses-permission android:name="android.permission.CAMERA" />
-                <uses-permission android:name="android.permission.RECORD_AUDIO" />
-                <uses-permission android:name="android.permission.READ_SMS" />
-                <uses-permission android:name="android.permission.RECEIVE_SMS" />
-                <uses-permission android:name="android.permission.SEND_SMS" />
-                <uses-permission android:name="android.permission.INTERNET" />
-                <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-                <uses-permission android:name="android.permission.WAKE_LOCK" />
-            </manifest>
-        </edit-config>
-    </platform>
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="AutoStart">
+                <param name="android-package" value="com.tonikorin.cordova.plugin.autostart.AutoStart"/>
+            </feature>
+        </config-file>
 
-    <!-- Hook لإضافة android:exported بعد تثبيت الإضافات -->
-    <hook type="after_plugin_install" src="hooks/after_plugin_install/fix-autostart-exported.js" />
-</widget>
+        <source-file src="src/android/AutoStart.java" target-dir="src/com/tonikorin/cordova/plugin/autostart" />
+        <source-file src="src/android/BootCompletedReceiver.java" target-dir="src/com/tonikorin/cordova/plugin/autostart" />
+        <source-file src="src/android/UserPresentReceiver.java" target-dir="src/com/tonikorin/cordova/plugin/autostart" />
+
+        <config-file target="AndroidManifest.xml" parent="/manifest/application">
+            <receiver
+                android:name="com.tonikorin.cordova.plugin.autostart.BootCompletedReceiver"
+                android:enabled="true"
+                android:exported="true">
+                <intent-filter>
+                    <action android:name="android.intent.action.BOOT_COMPLETED" />
+                </intent-filter>
+            </receiver>
+
+            <receiver
+                android:name="com.tonikorin.cordova.plugin.autostart.UserPresentReceiver"
+                android:enabled="true"
+                android:exported="true">
+                <intent-filter>
+                    <action android:name="android.intent.action.USER_PRESENT" />
+                </intent-filter>
+            </receiver>
+        </config-file>
+    </platform>
+</plugin>
