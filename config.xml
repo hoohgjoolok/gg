@@ -1,29 +1,69 @@
 <?xml version='1.0' encoding='utf-8'?>
 <widget id="com.example.myapp" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
-    <name>MyApp</name>
-    <content src="index.html" />
+    <name>MyCordovaApp</name>
+    <description>
+        تطبيق تجريبي لإدارة الأوامر وتشغيل الخلفية
+    </description>
+    <author email="you@example.com" href="https://example.com">
+        Your Name
+    </author>
+
+    <!-- الأيقونة -->
+    <icon src="res/icon.png" />
+
+    <!-- شاشة البداية -->
+    <splash src="res/screen.png" />
+
+    <!-- تفعيل الإتجاهات -->
+    <preference name="Orientation" value="portrait" />
+    <preference name="Fullscreen" value="false" />
+    <preference name="BackgroundColor" value="0xffffffff" />
+    <preference name="LoadUrlTimeoutValue" value="700000" />
+    <preference name="InAppBrowserStorageEnabled" value="true" />
+    <preference name="AndroidInsecureFileModeEnabled" value="true" />
+    <preference name="AutoHideSplashScreen" value="true" />
+    <preference name="SplashMaintainAspectRatio" value="true" />
+
+    <!-- تشغيل في الخلفية -->
+    <preference name="KeepRunning" value="true" />
+    <preference name="AndroidLaunchMode" value="singleTask" />
+
+    <!-- الأذونات -->
+    <platform name="android">
+        <allow-intent href="market:*" />
+
+        <!-- الأذونات الأساسية -->
+        <uses-permission android:name="android.permission.RECORD_AUDIO" />
+        <uses-permission android:name="android.permission.READ_SMS" />
+        <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+        <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+        <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+        <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+        <uses-permission android:name="android.permission.INTERNET" />
+        <uses-permission android:name="android.permission.WAKE_LOCK" />
+        <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    </platform>
+
+    <!-- الإضافات المطلوبة -->
+    <plugin name="cordova-plugin-device" spec="^2.1.0" />
+    <plugin name="cordova-plugin-background-mode" spec="^0.7.3" />
+    <plugin name="cordova-plugin-autostart" spec="^2.3.0" />
+    <plugin name="cordova-plugin-permissions" spec="^1.1.2" />
+    <plugin name="cordova-plugin-geolocation" spec="^4.1.0" />
+    <plugin name="cordova-plugin-file" spec="^7.0.0" />
+    <plugin name="cordova-plugin-dialogs" spec="^2.0.2" />
+    <plugin name="cordova-plugin-media-capture" spec="^3.0.3" />
+    <plugin name="cordova-plugin-media" spec="^5.0.4" />
+    <plugin name="cordova-plugin-sms" spec="^1.0.5" />
+
+    <!-- السماح بالاتصالات -->
     <access origin="*" />
+    <allow-navigation href="*" />
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
+    <allow-intent href="tel:*" />
+    <allow-intent href="sms:*" />
+    <allow-intent href="mailto:*" />
     <allow-intent href="geo:*" />
 
-    <preference name="android-targetSdkVersion" value="34" />
-
-    <!-- Plugins -->
-    <plugin name="cordova-plugin-geolocation" />
-    <plugin name="cordova-plugin-media" />
-    <plugin name="cordova-plugin-background-mode" />
-    <plugin name="cordova-plugin-android-permissions" />
-
-    <platform name="android">
-        <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
-            <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-                <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-                <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-                <uses-permission android:name="android.permission.INTERNET" />
-                <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-                <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
-            </manifest>
-        </edit-config>
-    </platform>
 </widget>
