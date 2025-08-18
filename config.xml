@@ -46,9 +46,9 @@
             </manifest>
         </edit-config>
 
-        <!-- إعدادات إضافية للتطبيق -->
+        <!-- تصحيح السطر هنا: بدون android: -->
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
-            <application android:usesCleartextTraffic="true" />
+            <application usesCleartextTraffic="true" />
         </edit-config>
     </platform>
 </widget>
