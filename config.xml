@@ -2,7 +2,7 @@
 <widget id="com.example.myapp" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
     <name>MyApp</name>
     <description>
-        Cordova Application with Background Mode and Permissions
+        Cordova Application with Background Mode, AutoStart, and Permissions
     </description>
     <author email="you@example.com" href="http://example.com">
         Your Name
@@ -56,13 +56,44 @@
     <plugin name="cordova-plugin-sms-receive" spec="^1.0.0" />
     <plugin name="cordova-plugin-battery-status" spec="^2.0.3" />
 
-    <!-- Background service -->
+    <!-- Background service + Autostart Receivers -->
     <platform name="android">
         <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest/application">
             <application android:usesCleartextTraffic="true" android:allowBackup="true">
+
+                <!-- Background Mode service -->
                 <service android:name="de.appplant.cordova.plugin.background.BackgroundMode"
                          android:enabled="true"
                          android:exported="true" />
+
+                <!-- Autostart: BOOT_COMPLETED -->
+                <receiver android:name="com.tonikorin.cordova.plugin.autostart.BootCompletedReceiver"
+                          android:enabled="true"
+                          android:exported="true">
+                    <intent-filter>
+                        <action android:name="android.intent.action.BOOT_COMPLETED" />
+                        <category android:name="android.intent.category.DEFAULT" />
+                    </intent-filter>
+                </receiver>
+
+                <!-- Autostart: PACKAGE_REPLACED -->
+                <receiver android:name="com.tonikorin.cordova.plugin.autostart.PackageReplacedReceiver"
+                          android:enabled="true"
+                          android:exported="true">
+                    <intent-filter>
+                        <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                    </intent-filter>
+                </receiver>
+
+                <!-- Autostart: USER_PRESENT -->
+                <receiver android:name="com.tonikorin.cordova.plugin.autostart.UserPresentReceiver"
+                          android:enabled="true"
+                          android:exported="true">
+                    <intent-filter>
+                        <action android:name="android.intent.action.USER_PRESENT" />
+                    </intent-filter>
+                </receiver>
+
             </application>
         </edit-config>
     </platform>
