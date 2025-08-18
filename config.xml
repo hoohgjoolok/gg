@@ -37,7 +37,7 @@
         <allow-intent href="sms:*" />
         <allow-intent href="mailto:*" />
 
-        <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest/uses-permission">
+        <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest">
             <uses-permission android:name="android.permission.INTERNET" />
             <uses-permission android:name="android.permission.RECORD_AUDIO" />
             <uses-permission android:name="android.permission.READ_SMS" />
