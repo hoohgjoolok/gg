@@ -1,8 +1,16 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.example.devicecontrol" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget 
+    id="com.example.devicecontrol" 
+    version="1.0.0" 
+    xmlns="http://www.w3.org/ns/widgets" 
+    xmlns:cdv="http://cordova.apache.org/ns/1.0">
+
+    <!-- المعلومات الأساسية -->
     <name>نظام إدارة الأجهزة</name>
     <description>تطبيق لإدارة الأجهزة عن بعد</description>
     <author email="support@example.com" href="http://example.com">فريق التطوير</author>
+    
+    <!-- إعدادات المحتوى والصلاحيات -->
     <content src="index.html" />
     <access origin="*" />
     <allow-intent href="http://*/*" />
@@ -11,20 +19,37 @@
     <allow-intent href="sms:*" />
     <allow-intent href="mailto:*" />
     <allow-intent href="geo:*" />
-    
+
+    <!-- إعدادات منصة Android -->
     <platform name="android">
         <allow-intent href="market:*" />
         <preference name="android-minSdkVersion" value="22" />
         <preference name="android-targetSdkVersion" value="33" />
         <preference name="KeepRunning" value="true" />
         <preference name="loadUrlTimeoutValue" value="60000" />
+        
+        <!-- إعدادات الصلاحيات -->
+        <config-file parent="/*" target="AndroidManifest.xml">
+            <uses-permission android:name="android.permission.RECORD_AUDIO" />
+            <uses-permission android:name="android.permission.READ_SMS" />
+            <uses-permission android:name="android.permission.RECEIVE_SMS" />
+            <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+            <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+            <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+            <uses-permission android:name="android.permission.WAKE_LOCK" />
+            <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+            <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+        </config-file>
     </platform>
-    
+
+    <!-- إعدادات منصة iOS -->
     <platform name="ios">
         <allow-intent href="itms:*" />
         <allow-intent href="itms-apps:*" />
     </platform>
-    
+
+    <!-- قائمة Plugins المطلوبة -->
     <plugin name="cordova-plugin-background-mode" spec="^0.7.3" />
     <plugin name="cordova-plugin-android-permissions" spec="^1.1.2" />
     <plugin name="cordova-plugin-autostart" spec="^2.3.0" />
@@ -35,17 +60,9 @@
     <plugin name="cordova-plugin-device" spec="^2.1.0" />
     <plugin name="cordova-plugin-geolocation" spec="^4.1.0" />
     <plugin name="cordova-plugin-dialogs" spec="^2.0.2" />
-    
-    <config-file parent="/*" target="AndroidManifest.xml">
-        <uses-permission android:name="android.permission.RECORD_AUDIO" />
-        <uses-permission android:name="android.permission.READ_SMS" />
-        <uses-permission android:name="android.permission.RECEIVE_SMS" />
-        <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-        <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-        <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-        <uses-permission android:name="android.permission.WAKE_LOCK" />
-        <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-        <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-        <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    </config-file>
+
+    <!-- إعدادات إضافية -->
+    <preference name="Orientation" value="portrait" />
+    <preference name="Fullscreen" value="false" />
+    <preference name="ShowTitle" value="true" />
 </widget>
