@@ -35,8 +35,8 @@
     <plugin name="cordova-plugin-vibration" />
     <plugin name="cordova-plugin-whitelist" />
 
+    <!-- صلاحيات أندرويد -->
     <platform name="android">
-        <!-- صلاحيات -->
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
             <manifest xmlns:android="http://schemas.android.com/apk/res/android">
                 <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
@@ -53,14 +53,8 @@
                 <uses-permission android:name="android.permission.WAKE_LOCK" />
             </manifest>
         </edit-config>
-
-        <!-- إصلاح android:exported لإضافات autostart -->
-        <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest/application/receiver[@android:name='com.tonikorin.cordova.plugin.autostart.BootCompletedReceiver']" xmlns:android="http://schemas.android.com/apk/res/android">
-            <receiver android:exported="true" />
-        </edit-config>
-
-        <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest/application/receiver[@android:name='com.tonikorin.cordova.plugin.autostart.UserPresentReceiver']" xmlns:android="http://schemas.android.com/apk/res/android">
-            <receiver android:exported="true" />
-        </edit-config>
     </platform>
+
+    <!-- Hook لإضافة android:exported بعد تثبيت الإضافات -->
+    <hook type="after_plugin_install" src="hooks/after_plugin_install/fix-autostart-exported.js" />
 </widget>
