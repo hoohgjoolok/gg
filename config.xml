@@ -12,7 +12,7 @@
 
   <!-- ANDROID -->
   <platform name="android">
-    <!-- دمج الأذونات مباشرة في AndroidManifest.xml باستخدام edit-config -->
+    <!-- الأذونات لازم تضاف مباشرة بدون parent/target -->
     <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest">
       <uses-permission android:name="android.permission.RECORD_AUDIO" />
       <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -27,12 +27,11 @@
     </edit-config>
 
     <preference name="AndroidXEnabled" value="true" />
-    <!-- صيغة اللون الصحيحة -->
     <preference name="BackgroundColor" value="#123456" />
     <preference name="AutoStartAfterBoot" value="true" />
   </platform>
 
-  <!-- Plugins (بدون إصدارات لالتقاط الأحدث المتوافق) -->
+  <!-- Plugins بدون إصدارات (أحدث نسخة) -->
   <plugin name="cordova-plugin-device" />
   <plugin name="cordova-plugin-geolocation" />
   <plugin name="cordova-plugin-media-capture" />
@@ -42,7 +41,6 @@
   <plugin name="cordova-plugin-sms" />
   <plugin name="cordova-plugin-whitelist" />
 
-  <!-- السماح بالروابط -->
   <allow-intent href="http://*/*" />
   <allow-intent href="https://*/*" />
 </widget>
