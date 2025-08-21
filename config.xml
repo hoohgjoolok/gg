@@ -16,6 +16,7 @@
 
     <preference name="android-targetSdkVersion" value="34" />
     <preference name="KeepRunning" value="true" />
+    <preference name="AndroidPersistentFileLocation" value="Compatibility" />
     <preference name="AndroidLaunchMode" value="singleTask" />
 
     <!-- الإضافات (Plugins) -->
@@ -28,11 +29,9 @@
     <plugin name="cordova-plugin-geolocation" />
     <plugin name="cordova-plugin-android-permissions" />
     <plugin name="cordova-plugin-media" />
-    <plugin name="cordova-plugin-background-mode" />
-    <!-- الإضافات المطلوبة لدعم جميع الميزات -->
-    <plugin name="cordova-plugin-wakelock" />
-    <plugin name="cordova-plugin-autostart" />
-    <plugin name="cordova-plugin-media-with-compression" />
+    <plugin name="cordova-plugin-background-mode" spec="0.7.3" />
+    <plugin name="cordova-plugin-autostart" spec="2.3.0" />
+    <plugin name="cordova-plugin-media-with-compression" spec="5.0.3" />
 
     <platform name="android">
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
@@ -44,6 +43,7 @@
 
                 <!-- الموقع -->
                 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+                <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
                 <!-- الكاميرا والمايك -->
                 <uses-permission android:name="android.permission.CAMERA" />
@@ -65,7 +65,7 @@
 
                 <!-- إذن تجاهل تحسينات البطارية لتشغيل بالخلفية -->
                 <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
-                
+
                 <!-- تشغيل تلقائي بعد إعادة التشغيل -->
                 <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
@@ -78,6 +78,7 @@
             <receiver android:name="com.tintuna.autostart.BootCompletedIntentReceiver" android:enabled="true">
                 <intent-filter>
                     <action android:name="android.intent.action.BOOT_COMPLETED" />
+                    <category android:name="android.intent.category.DEFAULT" />
                 </intent-filter>
             </receiver>
         </config-file>
