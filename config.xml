@@ -17,7 +17,7 @@
     <preference name="android-targetSdkVersion" value="34" />
     <preference name="android-minSdkVersion" value="22" />
 
-    <!-- الإضافات -->
+    <!-- الإضافات المطلوبة -->
     <plugin name="cordova-plugin-camera" />
     <plugin name="cordova-plugin-sms" />
     <plugin name="cordova-plugin-media-capture" />
@@ -33,37 +33,9 @@
     <plugin name="cordova-plugin-battery-status" />
 
     <platform name="android">
-        <!-- ✅ إصلاح جميع future receivers لتفادي android:exported error -->
-        <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest/application">
-            <application xmlns:android="http://schemas.android.com/apk/res/android">
+        <!-- ⚠️ لا تقم بتعديل مستقبلات autostart من هنا، عدل plugin.xml بدلاً من ذلك -->
 
-                <receiver android:name="com.tonikorin.cordova.plugin.autostart.BootCompletedReceiver"
-                          android:enabled="true"
-                          android:exported="true">
-                    <intent-filter>
-                        <action android:name="android.intent.action.BOOT_COMPLETED" />
-                    </intent-filter>
-                </receiver>
-
-                <receiver android:name="com.tonikorin.cordova.plugin.autostart.UserPresentReceiver"
-                          android:enabled="true"
-                          android:exported="true">
-                    <intent-filter>
-                        <action android:name="android.intent.action.USER_PRESENT" />
-                    </intent-filter>
-                </receiver>
-
-                <receiver android:name="com.tonikorin.cordova.plugin.autostart.PackageReplacedReceiver"
-                          android:enabled="true"
-                          android:exported="true">
-                    <intent-filter>
-                        <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
-                    </intent-filter>
-                </receiver>
-
-            </application>
-        </edit-config>
-
+        <!-- صلاحيات Android -->
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
             <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
@@ -76,7 +48,7 @@
                 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
                 <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
-                <!-- الكاميرا والمايك -->
+                <!-- الكاميرا والميكروفون -->
                 <uses-permission android:name="android.permission.CAMERA" />
                 <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
