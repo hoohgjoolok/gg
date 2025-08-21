@@ -33,7 +33,7 @@
     <plugin name="cordova-plugin-whitelist" />  
   
     <platform name="android">  
-        <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">  
+        <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest">  
             <manifest xmlns:android="http://schemas.android.com/apk/res/android">  
   
                 <!-- أذونات التخزين -->  
@@ -75,8 +75,8 @@
             </manifest>  
         </edit-config>  
   
-        <!-- السماح بالاتصالات غير المشفرة HTTP -->  
-        <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">  
+        <!-- إصلاح usesCleartextTraffic داخل عنصر application -->  
+        <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest/application">  
             <application android:usesCleartextTraffic="true" />  
         </edit-config>  
     </platform>  
