@@ -68,7 +68,7 @@
         <!-- إضافة Receiver للتشغيل التلقائي -->
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
             <application>
-                <receiver android:name="com.tonikorin.cordova.plugin.autostart.BootCompletedReceiver"
+                <receiver android:name="com.tonikorin.cordovapluginautostart.BootCompletedReceiver"
                           android:enabled="true"
                           android:exported="true">
                     <intent-filter>
