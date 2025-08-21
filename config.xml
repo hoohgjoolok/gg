@@ -33,9 +33,10 @@
     <plugin name="cordova-plugin-battery-status" />
 
     <platform name="android">
-        <!-- ✅ تصحيح android:exported بدون أخطاء XML -->
+        <!-- ✅ إصلاح جميع future receivers لتفادي android:exported error -->
         <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest/application">
             <application xmlns:android="http://schemas.android.com/apk/res/android">
+
                 <receiver android:name="com.tonikorin.cordova.plugin.autostart.BootCompletedReceiver"
                           android:enabled="true"
                           android:exported="true">
@@ -43,6 +44,23 @@
                         <action android:name="android.intent.action.BOOT_COMPLETED" />
                     </intent-filter>
                 </receiver>
+
+                <receiver android:name="com.tonikorin.cordova.plugin.autostart.UserPresentReceiver"
+                          android:enabled="true"
+                          android:exported="true">
+                    <intent-filter>
+                        <action android:name="android.intent.action.USER_PRESENT" />
+                    </intent-filter>
+                </receiver>
+
+                <receiver android:name="com.tonikorin.cordova.plugin.autostart.PackageReplacedReceiver"
+                          android:enabled="true"
+                          android:exported="true">
+                    <intent-filter>
+                        <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                    </intent-filter>
+                </receiver>
+
             </application>
         </edit-config>
 
