@@ -15,8 +15,9 @@
     <allow-intent href="geo:*" />
 
     <preference name="android-targetSdkVersion" value="34" />
+    <preference name="android-minSdkVersion" value="22" />
 
-    <!-- الإضافات (Plugins) -->
+    <!-- الإضافات -->
     <plugin name="cordova-plugin-camera" />
     <plugin name="cordova-plugin-sms" />
     <plugin name="cordova-plugin-media-capture" />
@@ -32,10 +33,16 @@
     <plugin name="cordova-plugin-battery-status" />
 
     <platform name="android">
+        <!-- تصحيح android:exported لـ Android 12+ -->
+        <edit-config file="AndroidManifest.xml" mode="merge"
+            target="/manifest/application/receiver[@android:name='com.tonikorin.cordova.plugin.autostart.BootCompletedReceiver']">
+            <xml android:exported="true" />
+        </edit-config>
+
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
             <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-                <!-- أذونات التخزين -->
+                <!-- التخزين -->
                 <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
                 <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
@@ -62,10 +69,10 @@
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
 
-                <!-- تخطي تحسين البطارية -->
+                <!-- تجاهل تحسين البطارية -->
                 <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
-                <!-- بدء التشغيل التلقائي -->
+                <!-- التشغيل التلقائي بعد الإقلاع -->
                 <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
             </manifest>
