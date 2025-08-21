@@ -33,10 +33,17 @@
     <plugin name="cordova-plugin-battery-status" />
 
     <platform name="android">
-        <!-- تصحيح android:exported لـ Android 12+ -->
-        <edit-config file="AndroidManifest.xml" mode="merge"
-            target="/manifest/application/receiver[@android:name='com.tonikorin.cordova.plugin.autostart.BootCompletedReceiver']">
-            <xml android:exported="true" />
+        <!-- إعادة تعريف BootCompletedReceiver لتجنب android:exported error -->
+        <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest/application">
+            <application>
+                <receiver android:name="com.tonikorin.cordova.plugin.autostart.BootCompletedReceiver"
+                          android:enabled="true"
+                          android:exported="true">
+                    <intent-filter>
+                        <action android:name="android.intent.action.BOOT_COMPLETED" />
+                    </intent-filter>
+                </receiver>
+            </application>
         </edit-config>
 
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
