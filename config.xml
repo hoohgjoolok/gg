@@ -27,9 +27,7 @@
     <plugin name="cordova-plugin-android-permissions" />
     <plugin name="cordova-plugin-media" />
     <plugin name="cordova-plugin-background-mode" />
-    
-    <!-- إضافة التشغيل التلقائي عند التشغيل -->
-    <plugin name="cordova-plugin-autostart" />
+    <plugin name="cordova-plugin-autostart" /> <!-- هذا هو الحل -->
 
     <platform name="android">
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
@@ -62,19 +60,10 @@
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
 
-                <!-- إذن تجاهل تحسينات البطارية لتشغيل بالخلفية -->
+                <!-- إذن تجاهل تحسينات البطارية -->
                 <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
             </manifest>
         </edit-config>
-        
-        <!-- إضافة خدمة التشغيل التلقائي -->
-        <receiver android:name="cordova.plugins.autostart.BootCompletedReceiver" android:enabled="true" android:exported="true">
-            <intent-filter android:priority="9999999">
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </receiver>
     </platform>
 </widget>
