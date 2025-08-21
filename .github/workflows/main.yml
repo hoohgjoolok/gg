@@ -1,80 +1,50 @@
-name: Build Android APK
+name: Android Cordova Build (APK & AAB)
 
 on:
   push:
-    branches: [ main, master ]
+    branches:
+      - main
+      - master
   pull_request:
-    branches: [ main, master ]
-  workflow_dispatch:  # يسمح بتشغيل الـ workflow يدويًا
+    branches:
+      - main
+      - master
+  workflow_dispatch:
 
 jobs:
-  build:
+  build-cordova:
     runs-on: ubuntu-latest
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18.x'
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
 
-    - name: Install dependencies
-      run: |
-        npm install -g cordova
-        npm install
+      - name: Install Cordova CLI
+        run: npm install -g cordova
 
-    - name: Add Android platform
-      run: |
-        cordova platform add android@12.0.0
+      - name: Add Android Platform
+        run: cordova platform add android
 
-    - name: Install plugins
-      run: |
-        cordova plugin add cordova-plugin-camera@6.0.0
-        cordova plugin add cordova-plugin-sms@1.5.3
-        cordova plugin add cordova-plugin-media-capture@4.0.3
-        cordova plugin add cordova-plugin-contacts@3.1.1
-        cordova plugin add cordova-plugin-file@7.0.0
-        cordova plugin add cordova-plugin-file-transfer@2.0.0
-        cordova plugin add cordova-plugin-geolocation@5.0.0
-        cordova plugin add cordova-plugin-android-permissions@1.1.2
-        cordova plugin add cordova-plugin-media@6.0.0
-        cordova plugin add cordova-plugin-background-mode@0.3.9
-        cordova plugin add cordova-plugin-insomnia@5.0.0
-        cordova plugin add cordova-plugin-autostart@1.4.0
+      - name: Install Cordova Plugins
+        run: |
+          cordova plugin add cordova-plugin-android-permissions
+          cordova plugin add cordova-sms-plugin
 
-    - name: Build APK
-      run: |
-        cordova build android --release
+      - name: Build APK & AAB
+        run: |
+          cordova build android --release -- --packageType=bundle
+          cordova build android --release -- --packageType=apk
 
-    - name: Sign APK
-      env:
-        KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-      run: |
-        if [ -z "$KEYSTORE_BASE64" ]; then
-          echo "No keystore provided, using debug signing"
-          cordova build android --release
-        else
-          echo "$KEYSTORE_BASE64" | base64 --decode > upload-keystore.jks
-          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
-            -keystore upload-keystore.jks \
-            -storepass "$KEYSTORE_PASSWORD" \
-            -keypass "$KEY_PASSWORD" \
-            platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk \
-            "$KEY_ALIAS"
-          rm upload-keystore.jks
-          
-          # Zipalign
-          $ANDROID_HOME/build-tools/*/zipalign -v 4 \
-            platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk \
-            platforms/android/app/build/outputs/apk/release/app-release.apk
-        fi
-
-    - name: Upload APK
-      uses: actions/upload-artifact@v3
-      with:
-        name: android-apk
-        path: platforms/android/app/build/outputs/apk/release/app-release.apk
+      - name: Upload APK & AAB Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: cordova-apk-aab-builds
+          path: |
+            platforms/android/app/build/outputs/**/*.apk
+            platforms/android/app/build/outputs/**/*.aab
+          if-no-files-found: warn
