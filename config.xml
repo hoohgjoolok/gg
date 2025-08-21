@@ -28,12 +28,12 @@
     <plugin name="cordova-plugin-media" />
     <plugin name="cordova-plugin-background-mode" />
 
-    <!-- أذونات وإعدادات خاصة -->
     <platform name="android">
+        <!-- أذونات النظام -->
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
             <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-                <!-- أذونات التخزين -->
+                <!-- التخزين -->
                 <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
                 <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
@@ -52,13 +52,13 @@
                 <!-- الشبكة -->
                 <uses-permission android:name="android.permission.INTERNET" />
 
-                <!-- الخدمات الأمامية والخلفية -->
+                <!-- الخدمات -->
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
 
-                <!-- البوت وتجاهل النوم -->
+                <!-- التشغيل عند الإقلاع وتجاهل البطارية -->
                 <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
                 <uses-permission android:name="android.permission.WAKE_LOCK" />
                 <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
@@ -66,7 +66,7 @@
             </manifest>
         </edit-config>
 
-        <!-- إضافات في عنصر application -->
+        <!-- عناصر داخل application -->
         <config-file target="AndroidManifest.xml" parent="./application">
             <receiver android:name="com.cordovaplugincustomboot.BootCompletedReceiver"
                       android:enabled="true"
@@ -78,6 +78,5 @@
 
             <service android:name="de.appplant.cordova.plugin.backgroundmode.BackgroundModeService" />
         </config-file>
-
     </platform>
 </widget>
