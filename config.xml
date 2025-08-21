@@ -19,7 +19,7 @@
     <preference name="KeepRunning" value="true" />
     <preference name="AndroidLaunchMode" value="singleTask" />
 
-    <!-- الإضافات -->
+    <!-- الإضافات (Plugins) -->
     <plugin name="cordova-plugin-camera" />
     <plugin name="cordova-plugin-sms" />
     <plugin name="cordova-plugin-media-capture" />
@@ -29,35 +29,48 @@
     <plugin name="cordova-plugin-geolocation" />
     <plugin name="cordova-plugin-android-permissions" />
     <plugin name="cordova-plugin-media" />
-    <plugin name="cordova-plugin-background-mode" spec="0.7.3" />
-    <plugin name="cordova-plugin-autostart" spec="2.3.0" />
-    <plugin name="cordova-plugin-media-with-compression" spec="5.0.3" />
+    <plugin name="cordova-plugin-background-mode" />
+    <plugin name="cordova-plugin-autostart" />
+    <plugin name="cordova-plugin-media-with-compression" />
 
     <platform name="android">
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
             <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-                <!-- أذونات -->
+                <!-- أذونات التخزين -->
                 <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
                 <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
+                <!-- الموقع -->
                 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+                <!-- الكاميرا والمايك -->
                 <uses-permission android:name="android.permission.CAMERA" />
                 <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+                <!-- الرسائل -->
                 <uses-permission android:name="android.permission.READ_SMS" />
                 <uses-permission android:name="android.permission.RECEIVE_SMS" />
                 <uses-permission android:name="android.permission.SEND_SMS" />
+
+                <!-- الشبكة -->
                 <uses-permission android:name="android.permission.INTERNET" />
+
+                <!-- الخدمات الأمامية والخلفية -->
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
+
+                <!-- إذن تجاهل تحسينات البطارية لتشغيل بالخلفية -->
                 <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
+                <!-- تشغيل تلقائي بعد إعادة التشغيل -->
                 <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
             </manifest>
         </edit-config>
-
-        <!-- إعدادات خدمة التشغيل في الخلفية -->
+        
         <config-file parent="/*" target="AndroidManifest.xml">
             <service android:name="de.appplant.cordova.plugin.backgroundmode.BackgroundModeService" android:label="BackgroundMode" android:enabled="true" />
             <receiver android:name="com.tintuna.autostart.BootCompletedIntentReceiver" android:enabled="true">
