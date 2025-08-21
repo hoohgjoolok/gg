@@ -1,8 +1,0 @@
-{
-  "name": "spyapp",
-  "version": "1.0.1",
-  "description": "Application for device monitoring",
-  "dependencies": {
-    "cordova": "^11.0.0"
-  }
-}
