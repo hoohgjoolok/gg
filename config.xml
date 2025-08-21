@@ -7,7 +7,6 @@
     <content src="index.html" />
     <access origin="*" />
 
-    <!-- السماح بالروابط -->
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
     <allow-intent href="tel:*" />
@@ -15,10 +14,9 @@
     <allow-intent href="mailto:*" />
     <allow-intent href="geo:*" />
 
-    <!-- الإعدادات -->
     <preference name="android-targetSdkVersion" value="34" />
 
-    <!-- الإضافات -->
+    <!-- الإضافات (Plugins) -->
     <plugin name="cordova-plugin-camera" />
     <plugin name="cordova-plugin-sms" />
     <plugin name="cordova-plugin-media-capture" />
@@ -29,19 +27,22 @@
     <plugin name="cordova-plugin-android-permissions" />
     <plugin name="cordova-plugin-media" />
     <plugin name="cordova-plugin-background-mode" />
+    <plugin name="cordova-plugin-autostart" />
+    <plugin name="cordova-plugin-device" />
+    <plugin name="cordova-plugin-battery-status" />
 
     <platform name="android">
-
-        <!-- أذونات النظام -->
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
             <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-                <!-- التخزين -->
+                <!-- أذونات التخزين -->
                 <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
                 <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
                 <!-- الموقع -->
                 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+                <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+                <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
                 <!-- الكاميرا والمايك -->
                 <uses-permission android:name="android.permission.CAMERA" />
@@ -55,32 +56,19 @@
                 <!-- الشبكة -->
                 <uses-permission android:name="android.permission.INTERNET" />
 
-                <!-- خدمات foreground -->
+                <!-- خدمات Foreground -->
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
 
-                <!-- الخلفية والإقلاع -->
-                <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-                <uses-permission android:name="android.permission.WAKE_LOCK" />
+                <!-- تخطي تحسين البطارية -->
                 <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
+                <!-- بدء التشغيل التلقائي -->
+                <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
             </manifest>
         </edit-config>
-
-        <!-- عناصر داخل <application> -->
-        <config-file target="AndroidManifest.xml" parent="./application">
-            <receiver android:name="com.cordovaplugincustomboot.BootCompletedReceiver"
-                      android:enabled="true"
-                      android:exported="true">
-                <intent-filter>
-                    <action android:name="android.intent.action.BOOT_COMPLETED" />
-                </intent-filter>
-            </receiver>
-
-            <service android:name="de.appplant.cordova.plugin.backgroundmode.BackgroundModeService" />
-        </config-file>
-
     </platform>
 </widget>
