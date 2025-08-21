@@ -31,7 +31,6 @@
     <plugin name="cordova-plugin-background-mode" />  
     <plugin name="cordova-plugin-autostart" />  
     <plugin name="cordova-plugin-whitelist" />  
-    <plugin name="cordova-plugin-ignore-battery-optimization" spec="https://github.com/agamemnus/cordova-plugin-ignore-battery-optimization" />  
   
     <platform name="android">  
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">  
@@ -67,16 +66,16 @@
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />  
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />  
   
-                <!-- إذن تجاهل تحسينات البطارية لتشغيل بالخلفية -->  
+                <!-- إذن تجاهل تحسينات البطارية -->  
                 <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />  
   
-                <!-- إذن بدء التشغيل التلقائي -->  
+                <!-- التشغيل التلقائي عند الإقلاع -->  
                 <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />  
   
             </manifest>  
         </edit-config>  
   
-        <!-- تفعيل حركة الشبكة غير المشفرة HTTP إذا لزم -->  
+        <!-- السماح بالاتصالات غير المشفرة HTTP -->  
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">  
             <application android:usesCleartextTraffic="true" />  
         </edit-config>  
