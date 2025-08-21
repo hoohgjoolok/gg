@@ -1,3 +1,4 @@
+
 <?xml version='1.0' encoding='utf-8'?>
 <widget id="com.spyapp.spy" version="1.0.1"
     xmlns="http://www.w3.org/ns/widgets"
@@ -16,7 +17,7 @@
 
     <preference name="android-targetSdkVersion" value="34" />
 
-    <!-- إشعار خدمة الخلفية -->
+    <!-- إشعار خدمة الخلفية الواجب ظهوره -->
     <preference name="BackgroundModeAndroidNotificationTitle" value="التطبيق يعمل في الخلفية" />
     <preference name="BackgroundModeAndroidNotificationText" value="جارٍ مراقبة الأوامر الواردة" />
 
@@ -36,7 +37,7 @@
     <plugin name="cordova-plugin-autostart" />
 
     <platform name="android">
-        <!-- أذونات Android الأساسية -->
+        <!-- أذونات نظام Android -->
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
             <manifest xmlns:android="http://schemas.android.com/apk/res/android">
                 <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
@@ -59,7 +60,7 @@
             </manifest>
         </edit-config>
 
-        <!-- تعديل البلوجين autostart ليدعم android:exported (API 31+) -->
+        <!-- إضافة receivers مع android:exported=true لتجنب خطأ Android 12+ -->
         <config-file file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
             <!-- BootCompletedReceiver -->
             <receiver android:name="com.tonikorin.cordova.plugin.autostart.BootCompletedReceiver"
@@ -80,5 +81,4 @@
             </receiver>
         </config-file>
     </platform>
-
 </widget>
