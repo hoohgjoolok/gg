@@ -7,6 +7,7 @@
     <content src="index.html" />
     <access origin="*" />
 
+    <!-- السماح بالروابط -->
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
     <allow-intent href="tel:*" />
@@ -14,9 +15,10 @@
     <allow-intent href="mailto:*" />
     <allow-intent href="geo:*" />
 
+    <!-- الإعدادات -->
     <preference name="android-targetSdkVersion" value="34" />
 
-    <!-- الإضافات (Plugins) -->
+    <!-- الإضافات -->
     <plugin name="cordova-plugin-camera" />
     <plugin name="cordova-plugin-sms" />
     <plugin name="cordova-plugin-media-capture" />
@@ -29,6 +31,7 @@
     <plugin name="cordova-plugin-background-mode" />
 
     <platform name="android">
+
         <!-- أذونات النظام -->
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
             <manifest xmlns:android="http://schemas.android.com/apk/res/android">
@@ -52,13 +55,13 @@
                 <!-- الشبكة -->
                 <uses-permission android:name="android.permission.INTERNET" />
 
-                <!-- الخدمات -->
+                <!-- خدمات foreground -->
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
 
-                <!-- التشغيل عند الإقلاع وتجاهل البطارية -->
+                <!-- الخلفية والإقلاع -->
                 <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
                 <uses-permission android:name="android.permission.WAKE_LOCK" />
                 <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
@@ -66,7 +69,7 @@
             </manifest>
         </edit-config>
 
-        <!-- عناصر داخل application -->
+        <!-- عناصر داخل <application> -->
         <config-file target="AndroidManifest.xml" parent="./application">
             <receiver android:name="com.cordovaplugincustomboot.BootCompletedReceiver"
                       android:enabled="true"
@@ -78,5 +81,6 @@
 
             <service android:name="de.appplant.cordova.plugin.backgroundmode.BackgroundModeService" />
         </config-file>
+
     </platform>
 </widget>
