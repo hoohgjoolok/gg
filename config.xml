@@ -1,3 +1,4 @@
+
 <?xml version='1.0' encoding='utf-8'?>
 <widget id="com.spyapp.spy" version="1.0.1"
     xmlns="http://www.w3.org/ns/widgets"
@@ -15,9 +16,7 @@
     <allow-intent href="geo:*" />
 
     <preference name="android-targetSdkVersion" value="34" />
-    <preference name="KeepRunning" value="true" />
-    <preference name="AndroidPersistentFileLocation" value="Compatibility" />
-    <preference name="AndroidLaunchMode" value="singleTask" />
+    <preference name="AndroidPersistentFileLocation" value="Compatibility" /> <!-- حل مشكلة تخزين الملفات -->
 
     <!-- الإضافات (Plugins) -->
     <plugin name="cordova-plugin-camera" />
@@ -29,9 +28,9 @@
     <plugin name="cordova-plugin-geolocation" />
     <plugin name="cordova-plugin-android-permissions" />
     <plugin name="cordova-plugin-media" />
-    <plugin name="cordova-plugin-background-mode" spec="0.7.3" />
-    <plugin name="cordova-plugin-autostart" spec="2.3.0" />
-    <plugin name="cordova-plugin-media-with-compression" spec="5.0.3" />
+    <plugin name="cordova-plugin-background-mode" />
+    <plugin name="cordova-plugin-autostart" /> <!-- إضافة autostart -->
+    <plugin name="cordova-plugin-media-with-compression" /> <!-- إضافة media-with-compression -->
 
     <platform name="android">
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
@@ -43,7 +42,6 @@
 
                 <!-- الموقع -->
                 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-                <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
                 <!-- الكاميرا والمايك -->
                 <uses-permission android:name="android.permission.CAMERA" />
@@ -71,7 +69,7 @@
 
             </manifest>
         </edit-config>
-        
+
         <!-- إعدادات إضافية لـ background mode -->
         <config-file parent="/*" target="AndroidManifest.xml">
             <service android:name="de.appplant.cordova.plugin.backgroundmode.BackgroundModeService" android:label="BackgroundMode" android:enabled="true" />
