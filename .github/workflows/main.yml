@@ -1,4 +1,3 @@
-
 name: Android Cordova Build (APK & AAB)
 
 on:
@@ -54,7 +53,7 @@ jobs:
         cordova build android --release -- --packageType=bundle
 
     - name: Upload APK & AAB Artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: cordova-build-artifacts
         path: |
