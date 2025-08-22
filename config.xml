@@ -29,8 +29,12 @@
     <plugin name="cordova-plugin-android-permissions" />
     <plugin name="cordova-plugin-media" />
     <plugin name="cordova-plugin-background-mode" />
-    <plugin name="cordova-plugin-autostart" />
     <plugin name="cordova-plugin-whitelist" />
+    
+    <!-- التثبيت الآمن للـ autostart بدون تعديل الـ manifest يدوياً -->
+    <plugin name="cordova-plugin-autostart">
+        <variable name="ANDROIDX_EXPORT_ENABLED" value="true" />
+    </plugin>
 
     <platform name="android">
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
@@ -73,14 +77,6 @@
                 <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
             </manifest>
-        </edit-config>
-
-        <!-- إصلاح android:exported لمستقبِلات autostart -->
-        <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest/application/receiver[@android:name='com.tonikorin.cordova.plugin.autostart.BootCompletedReceiver']">
-            <receiver android:exported="true" />
-        </edit-config>
-        <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest/application/receiver[@android:name='com.tonikorin.cordova.plugin.autostart.UserPresentReceiver']">
-            <receiver android:exported="true" />
         </edit-config>
     </platform>
 </widget>
