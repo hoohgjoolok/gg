@@ -1,4 +1,4 @@
-name: Android Cordova Build (APK & AAB)
+name: Android Cordova Build (APK only)
 
 on:
   push:
@@ -45,35 +45,27 @@ jobs:
       - name: Add Android Platform
         run: cordova platform add android@13.0.0
 
-      # تحضير الملفات (يولّد AndroidManifest.xml)
       - name: Cordova prepare (android)
         run: cordova prepare android
 
-      # الآن نعدّل بعد الـ prepare وقبل الـ compile
       - name: Patch AndroidManifest.xml (add android:exported)
         run: |
           MANIFEST="platforms/android/app/src/main/AndroidManifest.xml"
-
-          # لكل Receiver مستهدف، أضف android:exported="true" إذا لم تكن موجودة
           for RCV in \
             "com.tonikorin.cordova.plugin.autostart.BootCompletedReceiver" \
             "com.tonikorin.cordova.plugin.autostart.UserPresentReceiver" \
             "com.tonikorin.cordova.plugin.autostart.PackageReplacedReceiver"
           do
-            # أضف الخاصية قبل > أو /> بدون تكرار إذا كانت موجودة
             grep -q "android:name=\"${RCV}\"[^>]*android:exported=" "$MANIFEST" || \
             sed -i "s|\(<receiver[^>]*android:name=\"${RCV}\"[^>]*\)\(/>\)|\1 android:exported=\"true\"\2|; s|\(<receiver[^>]*android:name=\"${RCV}\"[^>]*\)\(>\)|\1 android:exported=\"true\"\2|" "$MANIFEST"
           done
 
-          echo "Patched receivers with android:exported=\"true\""
+      # APK فقط
+      - name: Compile APK (no prepare)
+        run: cordova compile android --release -- --packageType=apk
 
-      - name: Compile APK & AAB (no prepare)
-        run: cordova compile android --release -- --packageType=bundle
-
-      - name: Upload APK & AAB Artifacts
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cordova-build-artifacts
-          path: |
-            platforms/android/app/build/outputs/**/*.apk
-            platforms/android/app/build/outputs/**/*.aab
+          name: cordova-apk
+          path: platforms/android/app/build/outputs/**/*.apk
