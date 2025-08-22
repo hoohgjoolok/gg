@@ -1,4 +1,4 @@
-name: Android Cordova Build (APK only - unsigned)
+name: 📦 Build APK Only (Cordova Android)
 
 on:
   push:
@@ -10,24 +10,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+      - name: 🧾 Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Set up Node.js
+      - name: ⚙️ Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
 
-      - name: Set up Java (17)
+      - name: ☕ Set up Java (17)
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Install Cordova CLI
+      - name: 📦 Install Cordova CLI
         run: npm install -g cordova
 
-      - name: Install Cordova Plugins
+      - name: 🔌 Install Cordova Plugins
         run: |
           cordova plugin add cordova-plugin-camera
           cordova plugin add cordova-plugin-sms
@@ -43,31 +43,40 @@ jobs:
           cordova plugin add cordova-plugin-foreground-service
           cordova plugin add cordova-plugin-whitelist
 
-      - name: Add Android Platform
+      - name: ➕ Add Android Platform
         run: cordova platform add android@13.0.0
 
-      - name: Clean Android Build
+      - name: 🧹 Clean Android Build
         run: cordova clean android
 
-      - name: First Cordova prepare
+      - name: 🔧 Cordova prepare (android)
         run: cordova prepare android
 
-      - name: Delete corrupted config.xml in res/xml
+      - name: 🛠️ Patch AndroidManifest.xml (add android:exported)
+        run: |
+          MANIFEST="platforms/android/app/src/main/AndroidManifest.xml"
+          for RCV in \
+            "com.tonikorin.cordova.plugin.autostart.BootCompletedReceiver" \
+            "com.tonikorin.cordova.plugin.autostart.UserPresentReceiver" \
+            "com.tonikorin.cordova.plugin.autostart.PackageReplacedReceiver"
+          do
+            grep -q "android:name=\"${RCV}\"[^>]*android:exported=" "$MANIFEST" || \
+            sed -i "s|\(<receiver[^>]*android:name=\"${RCV}\"[^>]*\)\(/>\)|\1 android:exported=\"true\"\2|; s|\(<receiver[^>]*android:name=\"${RCV}\"[^>]*\)\(>\)|\1 android:exported=\"true\"\2|" "$MANIFEST"
+          done
+
+      - name: 🚫 Remove corrupted config.xml (res/xml)
         run: |
           FILE="platforms/android/app/src/main/res/xml/config.xml"
           if [ -f "$FILE" ]; then
-            echo "⚠️ Deleting bad config: $FILE"
-            rm "$FILE"
+            echo "Removing corrupted $FILE"
+            rm -f "$FILE"
           fi
 
-      - name: Second Cordova prepare (after deleting bad XML)
-        run: cordova prepare android
+      - name: 📦 Compile APK (Release Only)
+        run: cordova compile android --release -- --packageType=apk
 
-      - name: Build unsigned APK
-        run: cordova build android --release -- --packageType=apk
-
-      - name: Upload unsigned APK
+      - name: 📤 Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: unsigned-apk
-          path: platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk
+          name: cordova-apk
+          path: platforms/android/app/build/outputs/**/*.apk
