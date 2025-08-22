@@ -74,10 +74,5 @@
 
             </manifest>
         </edit-config>
-
-        <!-- إعدادات إصدار SDK -->
-        <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/uses-sdk">
-            <uses-sdk android:minSdkVersion="22" android:targetSdkVersion="34" />
-        </edit-config>
     </platform>
 </widget>
