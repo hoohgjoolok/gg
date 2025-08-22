@@ -41,9 +41,13 @@ jobs:
           cordova plugin add cordova-plugin-background-mode
           cordova plugin add cordova-plugin-autostart
           cordova plugin add cordova-plugin-whitelist
+          cordova plugin add cordova-plugin-foreground-service
 
       - name: Add Android Platform
         run: cordova platform add android@13.0.0
+
+      - name: Clean Android Build
+        run: cordova clean android
 
       - name: Cordova prepare (android)
         run: cordova prepare android
@@ -60,8 +64,7 @@ jobs:
             sed -i "s|\(<receiver[^>]*android:name=\"${RCV}\"[^>]*\)\(/>\)|\1 android:exported=\"true\"\2|; s|\(<receiver[^>]*android:name=\"${RCV}\"[^>]*\)\(>\)|\1 android:exported=\"true\"\2|" "$MANIFEST"
           done
 
-      # APK فقط
-      - name: Compile APK (no prepare)
+      - name: Compile APK (Release)
         run: cordova compile android --release -- --packageType=apk
 
       - name: Upload APK Artifact
