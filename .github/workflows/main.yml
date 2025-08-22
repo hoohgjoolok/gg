@@ -52,17 +52,20 @@ jobs:
       - name: Cordova prepare (android)
         run: cordova prepare android
 
-      - name: Remove corrupted config.xml (if exists)
+      - name: 🧹 Delete corrupted Android config.xml (res/xml)
         run: |
           FILE="platforms/android/app/src/main/res/xml/config.xml"
           if [ -f "$FILE" ]; then
-            rm -f "$FILE"
+            echo "⚠️ Deleting corrupted file: $FILE"
+            rm "$FILE"
+          else
+            echo "✅ No corrupted config.xml found, continuing..."
           fi
 
       - name: Build unsigned APK
         run: cordova build android --release -- --packageType=apk
 
-      - name: Decode Keystore
+      - name: Decode Keystore from Secret
         run: |
           echo "$KEYSTORE_BASE64" | base64 -d > my-release-key.keystore
         env:
