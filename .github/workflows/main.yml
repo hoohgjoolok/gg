@@ -40,8 +40,8 @@ jobs:
           cordova plugin add cordova-plugin-media
           cordova plugin add cordova-plugin-background-mode
           cordova plugin add cordova-plugin-autostart
-          cordova plugin add cordova-plugin-whitelist
           cordova plugin add cordova-plugin-foreground-service
+          cordova plugin add cordova-plugin-whitelist
 
       - name: Add Android Platform
         run: cordova platform add android@13.0.0
@@ -63,6 +63,14 @@ jobs:
             grep -q "android:name=\"${RCV}\"[^>]*android:exported=" "$MANIFEST" || \
             sed -i "s|\(<receiver[^>]*android:name=\"${RCV}\"[^>]*\)\(/>\)|\1 android:exported=\"true\"\2|; s|\(<receiver[^>]*android:name=\"${RCV}\"[^>]*\)\(>\)|\1 android:exported=\"true\"\2|" "$MANIFEST"
           done
+
+      - name: 🚫 Remove corrupted config.xml (res/xml)
+        run: |
+          FILE="platforms/android/app/src/main/res/xml/config.xml"
+          if [ -f "$FILE" ]; then
+            echo "Removing corrupted $FILE"
+            rm -f "$FILE"
+          fi
 
       - name: Compile APK (Release)
         run: cordova compile android --release -- --packageType=apk
