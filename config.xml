@@ -66,13 +66,21 @@
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
 
-                <!-- إذن تجاهل تحسينات البطارية لتشغيل بالخلفية -->
+                <!-- إذن تجاهل تحسينات البطارية -->
                 <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
                 <!-- التشغيل التلقائي -->
                 <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
             </manifest>
+        </edit-config>
+
+        <!-- إصلاح android:exported لمستقبِلات autostart -->
+        <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest/application/receiver[@android:name='com.tonikorin.cordova.plugin.autostart.BootCompletedReceiver']">
+            <receiver android:exported="true" />
+        </edit-config>
+        <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest/application/receiver[@android:name='com.tonikorin.cordova.plugin.autostart.UserPresentReceiver']">
+            <receiver android:exported="true" />
         </edit-config>
     </platform>
 </widget>
