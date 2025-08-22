@@ -15,8 +15,6 @@
     <allow-intent href="geo:*" />
 
     <preference name="android-targetSdkVersion" value="34" />
-    <preference name="AndroidPersistent" value="true" />
-    <preference name="AndroidForegroundService" value="true" />
 
     <!-- الإضافات (Plugins) -->
     <plugin name="cordova-plugin-camera" />
@@ -29,8 +27,6 @@
     <plugin name="cordova-plugin-android-permissions" />
     <plugin name="cordova-plugin-media" />
     <plugin name="cordova-plugin-background-mode" />
-    <plugin name="cordova-plugin-whitelist" />
-    <plugin name="cordova-plugin-autostart" />
 
     <platform name="android">
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
@@ -42,7 +38,6 @@
 
                 <!-- الموقع -->
                 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-                <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
                 <!-- الكاميرا والمايك -->
                 <uses-permission android:name="android.permission.CAMERA" />
@@ -53,12 +48,8 @@
                 <uses-permission android:name="android.permission.RECEIVE_SMS" />
                 <uses-permission android:name="android.permission.SEND_SMS" />
 
-                <!-- جهات الاتصال -->
-                <uses-permission android:name="android.permission.READ_CONTACTS" />
-
                 <!-- الشبكة -->
                 <uses-permission android:name="android.permission.INTERNET" />
-                <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
                 <!-- الخدمات الأمامية والخلفية -->
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
@@ -66,27 +57,10 @@
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
 
-                <!-- إذن تجاهل تحسينات البطارية -->
+                <!-- إذن تجاهل تحسينات البطارية لتشغيل بالخلفية -->
                 <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
-
-                <!-- التشغيل التلقائي -->
-                <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
             </manifest>
         </edit-config>
-
-        <!-- إضافة android:exported للمستقبلات المطلوبة من cordova-plugin-autostart -->
-        <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest/application/receiver[@android:name='com.tonikorin.cordova.plugin.autostart.BootCompletedReceiver']">
-            <receiver android:exported="true" />
-        </edit-config>
-
-        <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest/application/receiver[@android:name='com.tonikorin.cordova.plugin.autostart.UserPresentReceiver']">
-            <receiver android:exported="true" />
-        </edit-config>
-
-        <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest/application/receiver[@android:name='com.tonikorin.cordova.plugin.autostart.PackageReplacedReceiver']">
-            <receiver android:exported="true" />
-        </edit-config>
-
     </platform>
 </widget>
