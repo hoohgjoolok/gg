@@ -28,51 +28,48 @@
     <plugin name="cordova-plugin-media" />
     <plugin name="cordova-plugin-background-mode" />
     <plugin name="cordova-plugin-autostart" />
+    <plugin name="cordova-plugin-foreground-service" />
 
     <platform name="android">
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
-            <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+            <!-- أذونات التخزين -->
+            <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
-                <!-- أذونات التخزين -->
-                <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-                <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+            <!-- الموقع -->
+            <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
-                <!-- الموقع -->
-                <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+            <!-- الكاميرا والمايك -->
+            <uses-permission android:name="android.permission.CAMERA" />
+            <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
-                <!-- الكاميرا والمايك -->
-                <uses-permission android:name="android.permission.CAMERA" />
-                <uses-permission android:name="android.permission.RECORD_AUDIO" />
+            <!-- الرسائل -->
+            <uses-permission android:name="android.permission.READ_SMS" />
+            <uses-permission android:name="android.permission.RECEIVE_SMS" />
+            <uses-permission android:name="android.permission.SEND_SMS" />
 
-                <!-- الرسائل -->
-                <uses-permission android:name="android.permission.READ_SMS" />
-                <uses-permission android:name="android.permission.RECEIVE_SMS" />
-                <uses-permission android:name="android.permission.SEND_SMS" />
+            <!-- الشبكة -->
+            <uses-permission android:name="android.permission.INTERNET" />
+            <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-                <!-- الشبكة -->
-                <uses-permission android:name="android.permission.INTERNET" />
-                <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+            <!-- جهات الاتصال -->
+            <uses-permission android:name="android.permission.READ_CONTACTS" />
 
-                <!-- جهات الاتصال -->
-                <uses-permission android:name="android.permission.READ_CONTACTS" />
+            <!-- الخدمات الأمامية والخلفية -->
+            <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+            <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+            <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+            <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
+            <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
 
-                <!-- الخدمات الأمامية والخلفية -->
-                <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-                <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
-                <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
-                <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
-                <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
+            <!-- إذن تجاهل تحسينات البطارية لتشغيل بالخلفية -->
+            <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
-                <!-- إذن تجاهل تحسينات البطارية لتشغيل بالخلفية -->
-                <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+            <!-- إذن للتشغيل بعد إعادة تشغيل الجهاز -->
+            <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
-                <!-- إذن للتشغيل بعد إعادة تشغيل الجهاز -->
-                <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-
-                <!-- إذن إبقاء الجهاز نشطًا -->
-                <uses-permission android:name="android.permission.WAKE_LOCK" />
-
-            </manifest>
+            <!-- إذن إبقاء الجهاز نشطًا -->
+            <uses-permission android:name="android.permission.WAKE_LOCK" />
         </edit-config>
     </platform>
 </widget>
