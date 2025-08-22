@@ -49,16 +49,19 @@ jobs:
       - name: Clean Android Build
         run: cordova clean android
 
-      - name: Cordova prepare (android)
+      - name: First Cordova prepare
         run: cordova prepare android
 
-      - name: Delete corrupted Android config.xml (res/xml)
+      - name: Delete corrupted config.xml in res/xml
         run: |
           FILE="platforms/android/app/src/main/res/xml/config.xml"
           if [ -f "$FILE" ]; then
-            echo "⚠️ Deleting corrupted file: $FILE"
+            echo "⚠️ Deleting bad config: $FILE"
             rm "$FILE"
           fi
+
+      - name: Second Cordova prepare (after deleting bad XML)
+        run: cordova prepare android
 
       - name: Build unsigned APK
         run: cordova build android --release -- --packageType=apk
