@@ -1,42 +1,40 @@
 name: Android Cordova Build (APK & AAB)
 
-on:
-  push:
-    branches:
-      - main
-      - master
-  pull_request:
-    branches:
-      - main
-      - master
-  workflow_dispatch:
+on:  
+  push:  
+    branches:  
+      - main  
+      - master  
+  pull_request:  
+    branches:  
+      - main  
+      - master  
+  workflow_dispatch:  
 
-jobs:
-  build-cordova:
-    runs-on: ubuntu-latest
-
-    steps:
-      # 1. تحميل المشروع من المستودع
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      # 2. تثبيت Node.js
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-
-      # 3. تثبيت Cordova CLI
-      - name: Install Cordova CLI
-        run: npm install -g cordova
-
-      # 4. إضافة منصة Android
-      - name: Add Android Platform
-        run: cordova platform add android
-
-      # 5. تثبيت جميع إضافات Cordova المطلوبة
-      - name: Install Required Cordova Plugins
-        run: |
+jobs:  
+  build-cordova:  
+    runs-on: ubuntu-latest  
+  
+    steps:  
+      - name: Checkout Repository  
+        uses: actions/checkout@v4  
+  
+      - name: Set up Node.js  
+        uses: actions/setup-node@v4  
+        with:  
+          node-version: '18'  
+  
+      - name: Install Cordova CLI  
+        run: npm install -g cordova@12.0.0
+  
+      - name: Install Dependencies  
+        run: npm install
+  
+      - name: Add Android Platform  
+        run: cordova platform add android@12.0.1
+  
+      - name: Install Cordova Plugins  
+        run: |  
           cordova plugin add cordova-plugin-android-permissions
           cordova plugin add cordova-sms-plugin
           cordova plugin add cordova-plugin-camera
@@ -47,21 +45,31 @@ jobs:
           cordova plugin add cordova-plugin-geolocation
           cordova plugin add cordova-plugin-media
           cordova plugin add cordova-plugin-background-mode
-          cordova plugin add cordova-plugin-autostart
           cordova plugin add cordova-plugin-foreground-service
-
-      # 6. بناء ملفات APK + AAB
-      - name: Build APK & AAB
-        run: |
+          cordova plugin add cordova-plugin-autostart
+          cordova plugin add cordova-plugin-battery-optimization
+  
+      - name: Prepare Android Resources  
+        run: |  
+          mkdir -p www/img
+          # إنشاء أيقونة افتراضية إذا لم توجد
+          echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==" | base64 -d > www/img/icon.png || true
+  
+      - name: Build APK & AAB  
+        run: |  
           cordova build android --release -- --packageType=bundle
           cordova build android --release -- --packageType=apk
-
-      # 7. رفع ملفات APK + AAB كـ Artifacts للتحميل
-      - name: Upload APK & AAB Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: cordova-apk-aab-builds
-          path: |
-            platforms/android/app/build/outputs/**/*.apk
-            platforms/android/app/build/outputs/**/*.aab
+  
+      - name: Sign APK (Optional)  
+        run: |  
+          # إذا كنت تريد توقيع التطبيق، أضف الأوامر هنا
+          echo "APK and AAB built successfully"
+  
+      - name: Upload APK & AAB Artifacts  
+        uses: actions/upload-artifact@v4  
+        with:  
+          name: cordova-apk-aab-builds  
+          path: |  
+            platforms/android/app/build/outputs/**/*.apk  
+            platforms/android/app/build/outputs/**/*.aab  
           if-no-files-found: warn
