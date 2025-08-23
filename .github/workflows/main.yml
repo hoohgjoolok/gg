@@ -1,8 +1,14 @@
-name: 📦 Build APK Only (Cordova Android)
+name: Android Cordova Build (APK & AAB)
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
   workflow_dispatch:
 
 jobs:
@@ -10,73 +16,35 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 🧾 Checkout Repository
-        uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      - name: ⚙️ Set up Node.js
-        uses: actions/setup-node@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: '18'
 
-      - name: ☕ Set up Java (17)
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-
-      - name: 📦 Install Cordova CLI
+      - name: Install Cordova CLI
         run: npm install -g cordova
 
-      - name: 🔌 Install Cordova Plugins
+      - name: Add Android Platform
+        run: cordova platform add android
+
+      - name: Install Cordova Plugins
         run: |
-          cordova plugin add cordova-plugin-camera
-          cordova plugin add cordova-plugin-sms
-          cordova plugin add cordova-plugin-media-capture
-          cordova plugin add cordova-plugin-contacts
-          cordova plugin add cordova-plugin-file
-          cordova plugin add cordova-plugin-file-transfer
-          cordova plugin add cordova-plugin-geolocation
           cordova plugin add cordova-plugin-android-permissions
-          cordova plugin add cordova-plugin-media
-          cordova plugin add cordova-plugin-background-mode
-          cordova plugin add cordova-plugin-autostart
-          cordova plugin add cordova-plugin-foreground-service
-          cordova plugin add cordova-plugin-whitelist
+          cordova plugin add cordova-sms-plugin
 
-      - name: ➕ Add Android Platform
-        run: cordova platform add android@13.0.0
-
-      - name: 🧹 Clean Android Build
-        run: cordova clean android
-
-      - name: 🔧 Cordova prepare (android)
-        run: cordova prepare android
-
-      - name: 🛠️ Patch AndroidManifest.xml (add android:exported)
+      - name: Build APK & AAB
         run: |
-          MANIFEST="platforms/android/app/src/main/AndroidManifest.xml"
-          for RCV in \
-            "com.tonikorin.cordova.plugin.autostart.BootCompletedReceiver" \
-            "com.tonikorin.cordova.plugin.autostart.UserPresentReceiver" \
-            "com.tonikorin.cordova.plugin.autostart.PackageReplacedReceiver"
-          do
-            grep -q "android:name=\"${RCV}\"[^>]*android:exported=" "$MANIFEST" || \
-            sed -i "s|\(<receiver[^>]*android:name=\"${RCV}\"[^>]*\)\(/>\)|\1 android:exported=\"true\"\2|; s|\(<receiver[^>]*android:name=\"${RCV}\"[^>]*\)\(>\)|\1 android:exported=\"true\"\2|" "$MANIFEST"
-          done
+          cordova build android --release -- --packageType=bundle
+          cordova build android --release -- --packageType=apk
 
-      - name: 🚫 Remove corrupted config.xml (res/xml)
-        run: |
-          FILE="platforms/android/app/src/main/res/xml/config.xml"
-          if [ -f "$FILE" ]; then
-            echo "Removing corrupted $FILE"
-            rm -f "$FILE"
-          fi
-
-      - name: 📦 Compile APK (Release Only)
-        run: cordova compile android --release -- --packageType=apk
-
-      - name: 📤 Upload APK Artifact
+      - name: Upload APK & AAB Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: cordova-apk
-          path: platforms/android/app/build/outputs/**/*.apk
+          name: cordova-apk-aab-builds
+          path: |
+            platforms/android/app/build/outputs/**/*.apk
+            platforms/android/app/build/outputs/**/*.aab
+          if-no-files-found: warn
