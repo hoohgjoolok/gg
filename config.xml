@@ -65,7 +65,7 @@
             </manifest>
         </edit-config>
 
-        <!-- إضافة الأذونات الجديدة -->
+        <!-- أذونات إضافية لتشغيل تلقائي وخدمة دائمة -->
         <config-file target="AndroidManifest.xml" parent="/*">
             <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
             <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
