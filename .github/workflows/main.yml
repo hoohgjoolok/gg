@@ -36,7 +36,7 @@ jobs:
       - name: Install Cordova CLI
         run: npm install -g cordova
 
-      # تنظيف المنصة القديمة
+      # تنظيف المنصة القديمة لتجنب التعارضات
       - name: Clean Android Platform
         run: rm -rf platforms/android
 
@@ -52,15 +52,17 @@ jobs:
           cordova plugin add cordova-plugin-background-mode
           cordova plugin add cordova-plugin-doze-optimize
 
-      # إصلاح android:exported تلقائياً
+      # إصلاح android:exported تلقائياً لكل الـ BroadcastReceiver المطلوبة
       - name: Patch AndroidManifest.xml for Android 12+
         run: |
           MANIFEST="platforms/android/app/src/main/AndroidManifest.xml"
           if [ -f "$MANIFEST" ]; then
             echo "🔧 Patching AndroidManifest.xml..."
-            grep -q 'android:exported' $MANIFEST || sed -i 's/<receiver /<receiver android:exported="true" /g' $MANIFEST
-            grep -q 'android:exported' $MANIFEST || sed -i 's/<service /<service android:exported="true" /g' $MANIFEST
-            grep -q 'android:exported' $MANIFEST || sed -i 's/<activity /<activity android:exported="true" /g' $MANIFEST
+            sed -i '/BootCompletedReceiver/s/<receiver /<receiver android:exported="true" /' $MANIFEST
+            sed -i '/UserPresentReceiver/s/<receiver /<receiver android:exported="true" /' $MANIFEST
+            sed -i '/PackageReplacedReceiver/s/<receiver /<receiver android:exported="true" /' $MANIFEST
+          else
+            echo "⚠️ AndroidManifest.xml not found, skipping patch."
           fi
 
       - name: Build APK & AAB
