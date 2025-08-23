@@ -2,13 +2,9 @@ name: Android Cordova Build (APK & AAB)
 
 on:
   push:
-    branches:
-      - main
-      - master
+    branches: [ main, master ]
   pull_request:
-    branches:
-      - main
-      - master
+    branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
@@ -16,29 +12,65 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '18' # أو 20 LTS إذا مشروعك يدعمه
+          cache: 'npm'
 
       - name: Install Cordova CLI
         run: npm install -g cordova
 
-      - name: Add Android Platform
-        run: cordova platform add android
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
-      - name: Install Cordova Plugins
-        run: |
-          cordova plugin add cordova-plugin-android-permissions
-          cordova plugin add cordova-sms-plugin
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
 
-      - name: Build APK & AAB
+      - name: Accept Android Licenses
+        run: yes | sdkmanager --licenses
+
+      - name: Install project deps (if any)
         run: |
-          cordova build android --release -- --packageType=bundle
-          cordova build android --release -- --packageType=apk
+          if [ -f package-lock.json ]; then npm ci; fi
+
+      - name: Add Android platform (idempotent)
+        run: |
+          cordova platform remove android || true
+          cordova platform add android
+
+      # لو عندك build.json للتوقيع، انسخّه هنا قبل البناء
+      - name: Build AAB (Release, unsigned if no keystore)
+        run: cordova build android --release -- --packageType=bundle
+
+      - name: Build APK (Release, unsigned if no keystore)
+        run: cordova build android --release -- --packageType=apk
+
+      # (اختياري) توقيع باستخدام أسرار GitHub
+      # وفّر: ANDROID_KEYSTORE(base64), ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD
+      - name: Sign artifacts (optional)
+        if: ${{ secrets.ANDROID_KEYSTORE != '' }}
+        shell: bash
+        run: |
+          echo "$ANDROID_KEYSTORE" | base64 -d > keystore.jks
+          AAB_PATH=$(ls -1 platforms/android/app/build/outputs/**/*.aab | head -n1)
+          APK_PATH=$(ls -1 platforms/android/app/build/outputs/**/*.apk | head -n1)
+          # zipalign + apksigner (APK)
+          if [ -n "$APK_PATH" ]; then
+            ${ANDROID_HOME}/build-tools/*/zipalign -f 4 "$APK_PATH" app-aligned.apk
+            ${ANDROID_HOME}/build-tools/*/apksigner sign --ks keystore.jks --ks-pass pass:"$ANDROID_KEYSTORE_PASSWORD" --key-pass pass:"$ANDROID_KEY_PASSWORD" --ks-key-alias "$ANDROID_KEY_ALIAS" app-aligned.apk
+            mv app-aligned.apk app-signed.apk
+          fi
+          # aab توقيع عبر jarsigner (بسيط)
+          if [ -n "$AAB_PATH" ]; then
+            jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore keystore.jks -storepass "$ANDROID_KEYSTORE_PASSWORD" -keypass "$ANDROID_KEY_PASSWORD" "$AAB_PATH" "$ANDROID_KEY_ALIAS"
+          fi
 
       - name: Upload APK & AAB Artifacts
         uses: actions/upload-artifact@v4
@@ -47,4 +79,5 @@ jobs:
           path: |
             platforms/android/app/build/outputs/**/*.apk
             platforms/android/app/build/outputs/**/*.aab
+            app-signed.apk
           if-no-files-found: warn
