@@ -36,7 +36,7 @@ jobs:
       - name: Install Cordova CLI
         run: npm install -g cordova
 
-      # تنظيف منصة أندرويد لتجنب بقايا البناء السابق
+      # تنظيف المنصة القديمة قبل إعادة البناء
       - name: Clean Android Platform
         run: rm -rf platforms/android
 
@@ -48,7 +48,7 @@ jobs:
           cordova plugin add cordova-plugin-android-permissions
           cordova plugin add cordova-sms-plugin
           cordova plugin add cordova-plugin-foreground-service
-          cordova plugin add https://github.com/ToniKorin/cordova-plugin-autostart-fixed
+          cordova plugin add cordova-plugin-autostart2
           cordova plugin add cordova-plugin-background-mode
           cordova plugin add cordova-plugin-doze-optimize
 
