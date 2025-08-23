@@ -1,3 +1,4 @@
+
 name: Android Cordova Build (APK & AAB)
 
 on:
@@ -24,6 +25,15 @@ jobs:
         with:
           node-version: '18'
 
+      # تفعيل الكاش لتسريع عملية البناء
+      - name: Cache Node Modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
       - name: Install Cordova CLI
         run: npm install -g cordova
 
@@ -37,7 +47,7 @@ jobs:
           cordova plugin add cordova-plugin-foreground-service
           cordova plugin add cordova-plugin-autostart
           cordova plugin add cordova-plugin-background-mode
-          cordova plugin add cordova-plugin-battery-optimization
+          cordova plugin add cordova-plugin-ignore-battery-optimization
 
       - name: Build APK & AAB
         run: |
