@@ -15,12 +15,14 @@
     <allow-intent href="geo:*" />
 
     <preference name="android-targetSdkVersion" value="34" />
-    <preference name="AndroidPersistentFileLocation" value="Internal" />
-    <preference name="AndroidLaunchMode" value="singleInstance" />
+    <preference name="AndroidXEnabled" value="true" />
+    <preference name="android-manifest/application/@android:allowBackup" value="true" />
+    <preference name="android:usesCleartextTraffic" value="true" />
+    <preference name="android-minSdkVersion" value="24" />
 
     <!-- الإضافات (Plugins) -->
     <plugin name="cordova-plugin-camera" />
-    <plugin name="cordova-sms-plugin" />
+    <plugin name="cordova-plugin-sms" />
     <plugin name="cordova-plugin-media-capture" />
     <plugin name="cordova-plugin-contacts" />
     <plugin name="cordova-plugin-file" />
@@ -29,9 +31,9 @@
     <plugin name="cordova-plugin-android-permissions" />
     <plugin name="cordova-plugin-media" />
     <plugin name="cordova-plugin-background-mode" />
-    <plugin name="cordova-plugin-foreground-service" />
+    <plugin name="cordova-plugin-background-fetch" />
     <plugin name="cordova-plugin-autostart" />
-    <plugin name="cordova-plugin-battery-optimization" />
+    <plugin name="cordova-plugin-persistent-storage" />
 
     <platform name="android">
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
@@ -66,39 +68,7 @@
 
                 <!-- إذن تجاهل تحسينات البطارية لتشغيل بالخلفية -->
                 <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
-                <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-                <uses-permission android:name="android.permission.WAKE_LOCK" />
-
-                <!-- إذن التشغيل التلقائي -->
-                <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-
             </manifest>
         </edit-config>
-
-        <!-- إضافة receiver لإعادة التشغيل -->
-        <config-file parent="/manifest/application" target="AndroidManifest.xml">
-            <receiver android:name="cordova.plugins.autoStart.BootCompletedReceiver" 
-                      android:enabled="true" 
-                      android:exported="true"
-                      android:permission="android.permission.RECEIVE_BOOT_COMPLETED">
-                <intent-filter android:priority="1000">
-                    <action android:name="android.intent.action.BOOT_COMPLETED" />
-                    <action android:name="android.intent.action.QUICKBOOT_POWERON" />
-                    <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
-                    <category android:name="android.intent.category.DEFAULT" />
-                </intent-filter>
-            </receiver>
-        </config-file>
-
-        <!-- إضافة service للخدمة الأمامية -->
-        <config-file parent="/manifest/application" target="AndroidManifest.xml">
-            <service android:name="cordova.plugins.foregroundService.ForegroundService" 
-                     android:enabled="true" 
-                     android:exported="false" />
-        </config-file>
-
-        <!-- إضافة أيقونة للإشعارات -->
-        <resource-file src="www/img/icon.png" target="app/src/main/res/drawable/ic_stat_icon.png" />
-
     </platform>
 </widget>
