@@ -30,21 +30,20 @@ jobs:
       - name: Add Android Platform
         run: cordova platform add android
 
-      - name: Install Required Cordova Plugins
+      - name: Install Cordova Plugins
         run: |
-          cordova plugin add cordova-plugin-camera
-          cordova plugin add cordova-plugin-sms
-          cordova plugin add cordova-plugin-media-capture
-          cordova plugin add cordova-plugin-contacts
+          cordova plugin add cordova-plugin-android-permissions
+          cordova plugin add cordova-sms-plugin
           cordova plugin add cordova-plugin-file
           cordova plugin add cordova-plugin-file-transfer
-          cordova plugin add cordova-plugin-geolocation
-          cordova plugin add cordova-plugin-android-permissions
           cordova plugin add cordova-plugin-media
           cordova plugin add cordova-plugin-background-mode
-          cordova plugin add cordova-plugin-background-fetch
           cordova plugin add cordova-plugin-autostart
-          cordova plugin add cordova-plugin-persistent-storage
+          cordova plugin add cordova-plugin-foreground-service
+          cordova plugin add cordova-plugin-geolocation
+          cordova plugin add cordova-plugin-media-capture
+          cordova plugin add cordova-plugin-camera
+          cordova plugin add cordova-plugin-contacts
 
       - name: Build APK & AAB
         run: |
