@@ -14,11 +14,10 @@
     <allow-intent href="mailto:*" />
     <allow-intent href="geo:*" />
 
+    <!-- تحديد SDK حديث -->
     <preference name="android-targetSdkVersion" value="34" />
-    <preference name="AndroidXEnabled" value="true" />
-    <preference name="android-manifest/application/@android:allowBackup" value="true" />
-    <preference name="android:usesCleartextTraffic" value="true" />
     <preference name="android-minSdkVersion" value="24" />
+    <preference name="ForegroundService" value="true" />
 
     <!-- الإضافات (Plugins) -->
     <plugin name="cordova-plugin-camera" />
@@ -31,9 +30,8 @@
     <plugin name="cordova-plugin-android-permissions" />
     <plugin name="cordova-plugin-media" />
     <plugin name="cordova-plugin-background-mode" />
-    <plugin name="cordova-plugin-background-fetch" />
     <plugin name="cordova-plugin-autostart" />
-    <plugin name="cordova-plugin-persistent-storage" />
+    <plugin name="cordova-plugin-foreground-service" />
 
     <platform name="android">
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
@@ -66,8 +64,12 @@
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
 
-                <!-- إذن تجاهل تحسينات البطارية لتشغيل بالخلفية -->
+                <!-- إذن تجاهل تحسينات البطارية لتشغيل في الخلفية -->
                 <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
+                <!-- إذن بدء التطبيق تلقائياً عند التشغيل -->
+                <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
             </manifest>
         </edit-config>
     </platform>
