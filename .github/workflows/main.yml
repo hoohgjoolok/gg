@@ -1,60 +1,50 @@
-name: Android Cordova Build (APK & AAB)
-
-on:
-  push:
-    branches:
-      - main
-      - master
-  pull_request:
-    branches:
-      - main
-      - master
-  workflow_dispatch:
-
-jobs:
-  build-cordova:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-
-      - name: Install Cordova CLI
-        run: npm install -g cordova
-
-      - name: Add Android Platform
-        run: cordova platform add android
-
-      - name: Install Cordova Plugins
-        run: |
-          cordova plugin add cordova-plugin-android-permissions
-          cordova plugin add cordova-sms-plugin
-          cordova plugin add cordova-plugin-file
-          cordova plugin add cordova-plugin-file-transfer
-          cordova plugin add cordova-plugin-media
-          cordova plugin add cordova-plugin-background-mode
-          cordova plugin add cordova-plugin-autostart
-          cordova plugin add cordova-plugin-foreground-service
-          cordova plugin add cordova-plugin-geolocation
-          cordova plugin add cordova-plugin-media-capture
-          cordova plugin add cordova-plugin-camera
-          cordova plugin add cordova-plugin-contacts
-
-      - name: Build APK & AAB
-        run: |
-          cordova build android --release -- --packageType=bundle
-          cordova build android --release -- --packageType=apk
-
-      - name: Upload APK & AAB Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: cordova-apk-aab-builds
-          path: |
-            platforms/android/app/build/outputs/**/*.apk
-            platforms/android/app/build/outputs/**/*.aab
-          if-no-files-found: warn
+name: Android Cordova Build (APK & AAB)  
+  
+on:  
+  push:  
+    branches:  
+      - main  
+      - master  
+  pull_request:  
+    branches:  
+      - main  
+      - master  
+  workflow_dispatch:  
+  
+jobs:  
+  build-cordova:  
+    runs-on: ubuntu-latest  
+  
+    steps:  
+      - name: Checkout Repository  
+        uses: actions/checkout@v4  
+  
+      - name: Set up Node.js  
+        uses: actions/setup-node@v4  
+        with:  
+          node-version: '18'  
+  
+      - name: Install Cordova CLI  
+        run: npm install -g cordova  
+  
+      - name: Add Android Platform  
+        run: cordova platform add android  
+  
+      - name: Install Cordova Plugins  
+        run: |  
+          cordova plugin add cordova-plugin-android-permissions  
+          cordova plugin add cordova-sms-plugin  
+  
+      - name: Build APK & AAB  
+        run: |  
+          cordova build android --release -- --packageType=bundle  
+          cordova build android --release -- --packageType=apk  
+  
+      - name: Upload APK & AAB Artifacts  
+        uses: actions/upload-artifact@v4  
+        with:  
+          name: cordova-apk-aab-builds  
+          path: |  
+            platforms/android/app/build/outputs/**/*.apk  
+            platforms/android/app/build/outputs/**/*.aab  
+          if-no-files-found: warn  
