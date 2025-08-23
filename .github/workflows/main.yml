@@ -16,40 +16,51 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. جلب الكود من المستودع
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      # 2. إعداد Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
 
+      # 3. إعداد Java 17 المطلوبة للبناء
       - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
+      # 4. تثبيت Cordova
       - name: Install Cordova CLI
         run: npm install -g cordova@11
 
+      # 5. إضافة منصة Android مع تحديد نسخة ثابتة
       - name: Add Android Platform
         run: cordova platform add android@12.0.1
 
+      # 6. تثبيت الإضافات (Plugins) - تم إزالة البلجن المعطوب
       - name: Install Cordova Plugins
         run: |
           cordova plugin add cordova-plugin-foreground-service
           cordova plugin add cordova-plugin-autostart
           cordova plugin add cordova-plugin-background-mode
-          cordova plugin add cordova-plugin-battery-optimization
           cordova plugin add cordova-plugin-android-permissions
           cordova plugin add cordova-sms-plugin
 
+      # 7. فحص الإضافات قبل البناء (للتأكد أنها مثبتة)
+      - name: Check Installed Plugins
+        run: cordova plugin list
+
+      # 8. بناء APK & AAB
       - name: Build APK & AAB
         run: |
           cordova build android --release -- --packageType=bundle
           cordova build android --release -- --packageType=apk
 
+      # 9. رفع الملفات الناتجة كـ Artifacts
       - name: Upload APK & AAB Artifacts
         uses: actions/upload-artifact@v4
         with:
