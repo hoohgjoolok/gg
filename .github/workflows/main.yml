@@ -16,20 +16,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. تحميل المشروع من GitHub
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      # 2. تثبيت Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
 
+      # 3. تثبيت Cordova CLI
       - name: Install Cordova CLI
         run: npm install -g cordova
 
+      # 4. إضافة منصة Android
       - name: Add Android Platform
         run: cordova platform add android
 
+      # 5. تثبيت جميع إضافات Cordova المطلوبة
       - name: Install Required Cordova Plugins
         run: |
           cordova plugin add cordova-plugin-android-permissions
@@ -42,15 +47,17 @@ jobs:
           cordova plugin add cordova-plugin-geolocation
           cordova plugin add cordova-plugin-media
           cordova plugin add cordova-plugin-background-mode
-          cordova plugin add cordova-plugin-battery-optimization
           cordova plugin add cordova-plugin-autostart
           cordova plugin add cordova-plugin-foreground-service
+          cordova plugin add cordova-plugin-ignore-battery-optimization
 
+      # 6. بناء ملفات APK + AAB
       - name: Build APK & AAB
         run: |
           cordova build android --release -- --packageType=bundle
           cordova build android --release -- --packageType=apk
 
+      # 7. رفع ملفات APK + AAB كـ Artifacts للتحميل
       - name: Upload APK & AAB Artifacts
         uses: actions/upload-artifact@v4
         with:
