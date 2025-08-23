@@ -12,7 +12,7 @@ on:
   workflow_dispatch:  
 
 jobs:  
-  build-cordova:  
+  build-cordovabuild:  
     runs-on: ubuntu-latest  
   
     steps:  
@@ -27,8 +27,9 @@ jobs:
       - name: Install Cordova CLI  
         run: npm install -g cordova@12.0.0
   
-      - name: Install Dependencies  
-        run: npm install
+      # ❌ حذف خطوة npm install
+      # - name: Install Dependencies  
+      #   run: npm install
   
       - name: Add Android Platform  
         run: cordova platform add android@12.0.1
@@ -52,18 +53,13 @@ jobs:
       - name: Prepare Android Resources  
         run: |  
           mkdir -p www/img
-          # إنشاء أيقونة افتراضية إذا لم توجد
+          # إنشاء أيقونة إذا لم توجد
           echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==" | base64 -d > www/img/icon.png || true
   
       - name: Build APK & AAB  
         run: |  
           cordova build android --release -- --packageType=bundle
           cordova build android --release -- --packageType=apk
-  
-      - name: Sign APK (Optional)  
-        run: |  
-          # إذا كنت تريد توقيع التطبيق، أضف الأوامر هنا
-          echo "APK and AAB built successfully"
   
       - name: Upload APK & AAB Artifacts  
         uses: actions/upload-artifact@v4  
