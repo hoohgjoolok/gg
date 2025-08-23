@@ -26,22 +26,28 @@ jobs:
         with:
           node-version: '18'
 
-      # 3. إعداد Java 17 المطلوبة للبناء
+      # 3. إعداد Java 17
       - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      # 4. تثبيت Cordova
+      # 4. تثبيت Gradle إصدار متوافق
+      - name: Set up Gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: 7.6.3
+
+      # 5. تثبيت Cordova CLI
       - name: Install Cordova CLI
         run: npm install -g cordova@11
 
-      # 5. إضافة منصة Android مع تحديد نسخة ثابتة
+      # 6. إضافة منصة أندرويد
       - name: Add Android Platform
         run: cordova platform add android@12.0.1
 
-      # 6. تثبيت الإضافات (Plugins) - تم إزالة البلجن المعطوب
+      # 7. تثبيت الإضافات
       - name: Install Cordova Plugins
         run: |
           cordova plugin add cordova-plugin-foreground-service
@@ -50,17 +56,17 @@ jobs:
           cordova plugin add cordova-plugin-android-permissions
           cordova plugin add cordova-sms-plugin
 
-      # 7. فحص الإضافات قبل البناء (للتأكد أنها مثبتة)
+      # 8. فحص الإضافات قبل البناء
       - name: Check Installed Plugins
         run: cordova plugin list
 
-      # 8. بناء APK & AAB
+      # 9. بناء APK & AAB
       - name: Build APK & AAB
         run: |
           cordova build android --release -- --packageType=bundle
           cordova build android --release -- --packageType=apk
 
-      # 9. رفع الملفات الناتجة كـ Artifacts
+      # 10. رفع المخرجات كـ Artifacts
       - name: Upload APK & AAB Artifacts
         uses: actions/upload-artifact@v4
         with:
