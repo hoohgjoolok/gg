@@ -14,9 +14,11 @@
     <allow-intent href="mailto:*" />
     <allow-intent href="geo:*" />
 
+    <!-- نحدد SDK -->
     <preference name="android-targetSdkVersion" value="34" />
+    <preference name="android-minSdkVersion" value="24" />
 
-    <!-- الإضافات (Plugins) -->
+    <!-- الإضافات -->
     <plugin name="cordova-plugin-camera" />
     <plugin name="cordova-plugin-sms" />
     <plugin name="cordova-plugin-media-capture" />
@@ -27,10 +29,8 @@
     <plugin name="cordova-plugin-android-permissions" />
     <plugin name="cordova-plugin-media" />
     <plugin name="cordova-plugin-background-mode" />
-    <plugin name="cordova-plugin-foreground-service" />
-    <plugin name="cordova-plugin-autostart" />
-    <plugin name="cordova-plugin-battery-optimization" spec="https://github.com/katzer/cordova-plugin-battery-optimization.git" />
 
+    <!-- إعدادات منصة أندرويد -->
     <platform name="android">
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
             <manifest xmlns:android="http://schemas.android.com/apk/res/android">
@@ -60,17 +60,14 @@
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
 
-                <!-- إذن تجاهل تحسينات البطارية لتشغيل بالخلفية -->
+                <!-- إذن تجاهل تحسينات البطارية -->
                 <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
+                <!-- التشغيل عند الإقلاع -->
+                <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+                <uses-permission android:name="android.permission.WAKE_LOCK" />
+
             </manifest>
         </edit-config>
-
-        <!-- أذونات إضافية لتشغيل تلقائي وخدمة دائمة -->
-        <config-file target="AndroidManifest.xml" parent="/*">
-            <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-            <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-            <uses-permission android:name="android.permission.WAKE_LOCK" />
-            <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
-        </config-file>
     </platform>
 </widget>
