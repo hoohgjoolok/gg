@@ -1,8 +1,0 @@
-{
-  "name": "SpyApp",
-  "version": "1.0.1",
-  "description": "Background app with WebSocket connection",
-  "main": "index.html",
-  "author": "Your Name <your.email@example.com>",
-  "license": "MIT"
-}
