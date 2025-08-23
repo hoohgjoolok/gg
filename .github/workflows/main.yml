@@ -46,7 +46,7 @@ jobs:
           cordova plugin add cordova-plugin-foreground-service
           cordova plugin add cordova-plugin-autostart
           cordova plugin add cordova-plugin-background-mode
-          cordova plugin add https://github.com/urish/cordova-plugin-ignore-battery-optimization-settings
+          cordova plugin add cordova-plugin-doze-optimize
 
       - name: Build APK & AAB
         run: |
