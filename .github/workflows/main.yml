@@ -25,35 +25,31 @@ jobs:
           node-version: '18'  
   
       - name: Install Cordova CLI  
-        run: npm install -g cordova@12.0.0
-  
-      # ❌ حذف خطوة npm install
-      # - name: Install Dependencies  
-      #   run: npm install
+        run: npm install -g cordova@11.0.0
   
       - name: Add Android Platform  
-        run: cordova platform add android@12.0.1
+        run: cordova platform add android@11.0.0
   
       - name: Install Cordova Plugins  
         run: |  
-          cordova plugin add cordova-plugin-android-permissions
-          cordova plugin add cordova-sms-plugin
-          cordova plugin add cordova-plugin-camera
-          cordova plugin add cordova-plugin-media-capture
-          cordova plugin add cordova-plugin-contacts
-          cordova plugin add cordova-plugin-file
-          cordova plugin add cordova-plugin-file-transfer
-          cordova plugin add cordova-plugin-geolocation
-          cordova plugin add cordova-plugin-media
-          cordova plugin add cordova-plugin-background-mode
-          cordova plugin add cordova-plugin-foreground-service
-          cordova plugin add cordova-plugin-autostart
-          cordova plugin add cordova-plugin-battery-optimization
+          # استخدام إصدارات معروفة ومتوفرة
+          cordova plugin add cordova-plugin-android-permissions@4.0.3
+          cordova plugin add cordova-sms-plugin@1.0.0
+          cordova plugin add cordova-plugin-camera@6.0.0
+          cordova plugin add cordova-plugin-media-capture@3.0.0
+          cordova plugin add cordova-plugin-contacts@4.0.0
+          cordova plugin add cordova-plugin-file@7.0.0
+          cordova plugin add cordova-plugin-file-transfer@2.0.0
+          cordova plugin add cordova-plugin-geolocation@5.0.0
+          cordova plugin add cordova-plugin-media@6.0.0
+          cordova plugin add cordova-plugin-background-mode@1.0.0
+          cordova plugin add cordova-plugin-foreground-service@1.0.0
+          cordova plugin add cordova-plugin-autostart@1.0.0
+          cordova plugin add cordova-plugin-battery-optimization@1.0.0
   
       - name: Prepare Android Resources  
         run: |  
           mkdir -p www/img
-          # إنشاء أيقونة إذا لم توجد
           echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==" | base64 -d > www/img/icon.png || true
   
       - name: Build APK & AAB  
