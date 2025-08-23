@@ -32,8 +32,16 @@ jobs:
 
       - name: Install Cordova Plugins
         run: |
-          cordova plugin add cordova-plugin-android-permissions
+          cordova plugin add cordova-plugin-background-mode
+          cordova plugin add cordova-plugin-foreground-service
+          cordova plugin add cordova-plugin-autostart
+          cordova plugin add cordova-plugin-androidx
+          cordova plugin add cordova-plugin-androidx-adapter
+          cordova plugin add cordova-plugin-file
+          cordova plugin add cordova-plugin-device
+          cordova plugin add cordova-plugin-geolocation
           cordova plugin add cordova-sms-plugin
+          cordova plugin add cordova-plugin-media
 
       - name: Build APK & AAB
         run: |
