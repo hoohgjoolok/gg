@@ -48,6 +48,19 @@ jobs:
           cordova plugin add cordova-plugin-background-mode
           cordova plugin add cordova-plugin-doze-optimize
 
+      # إصلاح مشكلة Android 12+ تلقائياً
+      - name: Patch AndroidManifest.xml for Android 12+
+        run: |
+          MANIFEST="platforms/android/app/src/main/AndroidManifest.xml"
+          if [ -f "$MANIFEST" ]; then
+            echo "🔧 Patching AndroidManifest.xml to add android:exported=\"true\"..."
+            sed -i 's/<receiver /<receiver android:exported="true" /g' $MANIFEST
+            sed -i 's/<activity /<activity android:exported="true" /g' $MANIFEST
+            sed -i 's/<service /<service android:exported="true" /g' $MANIFEST
+          else
+            echo "⚠️ AndroidManifest.xml not found, skipping patch."
+          fi
+
       - name: Build APK & AAB
         run: |
           cordova build android --release -- --packageType=bundle
