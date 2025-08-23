@@ -16,31 +16,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # الخطوة 1: سحب المشروع
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # تثبيت Java JDK 11 (مطلوب لتوافق Cordova Android 12)
+      # الخطوة 2: تثبيت Java JDK 11 (مطلوب لتوافق Cordova Android 12)
       - name: Set up Java JDK 11
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '11'
 
-      # تثبيت Node.js
+      # الخطوة 3: تثبيت Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
 
-      # تثبيت Cordova CLI
+      # الخطوة 4: تثبيت Cordova CLI
       - name: Install Cordova CLI
         run: npm install -g cordova
 
-      # إضافة منصة Android
+      # الخطوة 5: إضافة منصة Android
       - name: Add Android Platform
         run: cordova platform add android@12.0.1
 
-      # تثبيت جميع الإضافات المطلوبة
+      # الخطوة 6: تثبيت جميع الإضافات (Plugins)
       - name: Install Cordova Plugins
         run: |
           cordova plugin add cordova-plugin-android-permissions
@@ -57,27 +58,37 @@ jobs:
           cordova plugin add cordova-plugin-autostart
           cordova plugin add cordova-plugin-background-fetch
 
-      # إصلاح مشكلة Android SDK Root
+      # الخطوة 7: تثبيت Android SDK و Build Tools بالطريقة الصحيحة
       - name: Install Android SDK & Build Tools
         run: |
           sudo apt-get update -y
           sudo apt-get install -y wget unzip
+          
+          # إنشاء مجلد SDK رئيسي
           mkdir -p $HOME/android-sdk/cmdline-tools
           cd $HOME/android-sdk/cmdline-tools
+          
+          # تحميل أدوات Android Command Line Tools
           wget https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip
           unzip commandlinetools-linux-8512546_latest.zip -d latest
+          
+          # إعداد مسار Android SDK
           export ANDROID_HOME=$HOME/android-sdk
           export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
+          
+          # قبول جميع تراخيص SDK
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+          
+          # تثبيت المنصات والأدوات المطلوبة
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-34" "build-tools;33.0.2"
 
-      # إعداد Gradle على الإصدار المطلوب
+      # الخطوة 8: إعداد Gradle بالإصدار المطلوب
       - name: Set up Gradle
         uses: gradle/gradle-build-action@v2
         with:
           gradle-version: 7.6.3
 
-      # بناء APK و AAB
+      # الخطوة 9: بناء APK و AAB
       - name: Build APK & AAB
         run: |
           export ANDROID_HOME=$HOME/android-sdk
@@ -85,7 +96,7 @@ jobs:
           cordova build android --release -- --packageType=apk
           cordova build android --release -- --packageType=bundle
 
-      # رفع ملفات APK و AAB بعد البناء
+      # الخطوة 10: رفع ملفات APK و AAB بعد البناء
       - name: Upload APK & AAB Artifacts
         uses: actions/upload-artifact@v4
         with:
