@@ -33,21 +33,35 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      # 4. تثبيت Gradle إصدار متوافق
+      # 4. تثبيت Gradle الإصدار المتوافق
       - name: Set up Gradle
         uses: gradle/gradle-build-action@v2
         with:
           gradle-version: 7.6.3
 
-      # 5. تثبيت Cordova CLI
+      # 5. تثبيت Android SDK + Build Tools
+      - name: Install Android SDK
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget tar unzip
+          wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+          unzip commandlinetools-linux-11076708_latest.zip -d cmdline-tools
+          sudo mkdir -p /usr/local/lib/android/sdk/cmdline-tools/latest
+          sudo mv cmdline-tools/* /usr/local/lib/android/sdk/cmdline-tools/latest
+          export ANDROID_HOME=/usr/local/lib/android/sdk
+          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
+          yes | sdkmanager --sdk_root=$ANDROID_HOME --licenses
+          yes | sdkmanager --sdk_root=$ANDROID_HOME "platform-tools" "platforms;android-34" "build-tools;33.0.2"
+
+      # 6. تثبيت Cordova CLI
       - name: Install Cordova CLI
         run: npm install -g cordova@11
 
-      # 6. إضافة منصة أندرويد
+      # 7. إضافة منصة أندرويد
       - name: Add Android Platform
         run: cordova platform add android@12.0.1
 
-      # 7. تثبيت الإضافات
+      # 8. تثبيت الإضافات (Plugins)
       - name: Install Cordova Plugins
         run: |
           cordova plugin add cordova-plugin-foreground-service
@@ -56,17 +70,19 @@ jobs:
           cordova plugin add cordova-plugin-android-permissions
           cordova plugin add cordova-sms-plugin
 
-      # 8. فحص الإضافات قبل البناء
+      # 9. فحص الإضافات للتأكد من تثبيتها
       - name: Check Installed Plugins
         run: cordova plugin list
 
-      # 9. بناء APK & AAB
+      # 10. بناء APK & AAB
       - name: Build APK & AAB
         run: |
+          export ANDROID_HOME=/usr/local/lib/android/sdk
+          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
           cordova build android --release -- --packageType=bundle
           cordova build android --release -- --packageType=apk
 
-      # 10. رفع المخرجات كـ Artifacts
+      # 11. رفع المخرجات كـ Artifacts
       - name: Upload APK & AAB Artifacts
         uses: actions/upload-artifact@v4
         with:
