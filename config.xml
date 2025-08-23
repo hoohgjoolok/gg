@@ -39,7 +39,6 @@
     <plugin name="cordova-plugin-background-mode" />
     <plugin name="cordova-plugin-autostart" />
     <plugin name="cordova-plugin-foreground-service" />
-    <plugin name="cordova-plugin-ignore-battery-optimization" />
 
     <platform name="android">
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
