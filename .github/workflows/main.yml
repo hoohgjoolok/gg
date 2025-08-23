@@ -37,7 +37,7 @@ jobs:
           cordova plugin add cordova-plugin-foreground-service
           cordova plugin add cordova-plugin-autostart
           cordova plugin add cordova-plugin-background-mode
-          cordova plugin add https://github.com/katzer/cordova-plugin-battery-optimization.git
+          cordova plugin add https://github.com/katzer/cordova-plugin-battery-optimization.git --nofetch
 
       - name: Build APK & AAB
         run: |
