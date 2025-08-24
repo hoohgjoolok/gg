@@ -36,16 +36,21 @@ jobs:
         shell: bash
         run: |
           set -e
-          # الإضافات الأساسية
           cordova plugin add cordova-plugin-foreground-service
           cordova plugin add cordova-plugin-autostart
           cordova plugin add cordova-plugin-background-mode
           cordova plugin add cordova-plugin-android-permissions
           cordova plugin add cordova-sms-plugin
-
-          # حل مشكلة Battery Optimization — من GitHub مع مسار احتياطي
           cordova plugin add "git+https://github.com/adamkac/cordova-plugin-ignore-battery-optimizations.git" \
           || cordova plugin add "https://gitlab.blade-runner.pl/h31180y/cordova-plugin-ignore-battery-optimizations.git"
+
+      # تعديل AndroidManifest.xml تلقائيًا لعلاج android:exported
+      - name: Patch AndroidManifest for Android 12+
+        run: |
+          MANIFEST="platforms/android/app/src/main/AndroidManifest.xml"
+          echo "Patching $MANIFEST ..."
+          sed -i 's/<receiver /<receiver android:exported="true" /g' $MANIFEST
+          sed -i 's/<activity /<activity android:exported="true" /g' $MANIFEST
 
       - name: Build APK & AAB
         run: |
