@@ -1,5 +1,5 @@
 name: Android Cordova Build (APK & AAB)
-          
+
 on:
   push:
     branches:
@@ -10,26 +10,43 @@ on:
       - main
       - master
   workflow_dispatch:
-          
+
 jobs:
   build-cordova:
     runs-on: ubuntu-latest
-          
+
     steps:
+      # 1. تحميل المستودع
       - name: Checkout Repository
         uses: actions/checkout@v4
-          
+
+      # 2. إعداد Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          
+          cache: 'npm'
+
+      # 3. تفعيل التخزين المؤقت للـ Gradle لتسريع البناء
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      # 4. تثبيت Cordova CLI
       - name: Install Cordova CLI
         run: npm install -g cordova
-          
+
+      # 5. إضافة منصة Android
       - name: Add Android Platform
         run: cordova platform add android
-          
+
+      # 6. تثبيت البلجنات المطلوبة
       - name: Install Cordova Plugins
         run: |
           cordova plugin add cordova-plugin-android-permissions
@@ -37,13 +54,15 @@ jobs:
           cordova plugin add cordova-plugin-foreground-service
           cordova plugin add cordova-plugin-autostart
           cordova plugin add cordova-plugin-background-mode
-          cordova plugin add cordova-plugin-battery-optimization
-          
+          cordova plugin add cordova-plugin-ignore-battery-optimizations
+
+      # 7. بناء ملفي APK & AAB
       - name: Build APK & AAB
         run: |
           cordova build android --release -- --packageType=bundle
           cordova build android --release -- --packageType=apk
-          
+
+      # 8. رفع الملفات الناتجة
       - name: Upload APK & AAB Artifacts
         uses: actions/upload-artifact@v4
         with:
