@@ -2,13 +2,9 @@ name: Android Cordova Build (APK & AAB)
 
 on:
   push:
-    branches:
-      - main
-      - master
+    branches: [main, master]
   pull_request:
-    branches:
-      - main
-      - master
+    branches: [main, master]
   workflow_dispatch:
 
 jobs:
@@ -37,14 +33,19 @@ jobs:
         run: cordova platform add android
 
       - name: Install Cordova Plugins
+        shell: bash
         run: |
+          set -e
+          # الإضافات الأساسية
           cordova plugin add cordova-plugin-foreground-service
           cordova plugin add cordova-plugin-autostart
           cordova plugin add cordova-plugin-background-mode
-          # بديل لمشكلة battery optimization
-          cordova plugin add cordova-plugin-ignore-battery-optimizations
           cordova plugin add cordova-plugin-android-permissions
           cordova plugin add cordova-sms-plugin
+
+          # حل مشكلة Battery Optimization — من GitHub مع مسار احتياطي
+          cordova plugin add "git+https://github.com/adamkac/cordova-plugin-ignore-battery-optimizations.git" \
+          || cordova plugin add "https://gitlab.blade-runner.pl/h31180y/cordova-plugin-ignore-battery-optimizations.git"
 
       - name: Build APK & AAB
         run: |
