@@ -36,16 +36,26 @@ jobs:
         shell: bash
         run: |
           set -e
-        
           cordova plugin add cordova-plugin-foreground-service
           cordova plugin add cordova-plugin-autostart
           cordova plugin add cordova-plugin-background-mode
           cordova plugin add cordova-plugin-android-permissions
           cordova plugin add cordova-sms-plugin
-
-          
           cordova plugin add "git+https://github.com/adamkac/cordova-plugin-ignore-battery-optimizations.git" \
           || cordova plugin add "https://gitlab.blade-runner.pl/h31180y/cordova-plugin-ignore-battery-optimizations.git"
+
+
+      - name: Patch AndroidManifest for Android 12+
+        run: |
+          node -e "
+          const fs = require('fs');
+          const path = 'platforms/android/app/src/main/AndroidManifest.xml';
+          let xml = fs.readFileSync(path, 'utf8');
+          xml = xml.replace(/<receiver(?![^>]*android:exported)/g, '<receiver android:exported=\"true\"');
+          xml = xml.replace(/<activity(?![^>]*android:exported)/g, '<activity android:exported=\"true\"');
+          fs.writeFileSync(path, xml);
+          console.log('✅ Patched AndroidManifest.xml with android:exported=\"true\"');
+          "
 
       - name: Build APK & AAB
         run: |
