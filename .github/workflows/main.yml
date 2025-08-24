@@ -36,7 +36,7 @@ jobs:
       - name: Install Cordova CLI
         run: npm install -g cordova
 
-      # تنظيف المنصة القديمة قبل إعادة البناء
+      # تنظيف المنصة القديمة لتجنب أي تعارضات
       - name: Clean Android Platform
         run: rm -rf platforms/android
 
@@ -48,9 +48,22 @@ jobs:
           cordova plugin add cordova-plugin-android-permissions
           cordova plugin add cordova-sms-plugin
           cordova plugin add cordova-plugin-foreground-service
-          cordova plugin add cordova-plugin-autostart2
+          cordova plugin add cordova-plugin-autostart
           cordova plugin add cordova-plugin-background-mode
           cordova plugin add cordova-plugin-doze-optimize
+
+      # إصلاح android:exported تلقائياً في AndroidManifest.xml
+      - name: Patch AndroidManifest.xml for Android 12+
+        run: |
+          MANIFEST="platforms/android/app/src/main/AndroidManifest.xml"
+          if [ -f "$MANIFEST" ]; then
+            echo "🔧 Adding android:exported to autostart receivers..."
+            sed -i '/BootCompletedReceiver/ {/android:exported=/! s/<receiver /<receiver android:exported="true" /}' $MANIFEST
+            sed -i '/UserPresentReceiver/ {/android:exported=/! s/<receiver /<receiver android:exported="true" /}' $MANIFEST
+            sed -i '/PackageReplacedReceiver/ {/android:exported=/! s/<receiver /<receiver android:exported="true" /}' $MANIFEST
+          else
+            echo "⚠️ AndroidManifest.xml not found, skipping patch."
+          fi
 
       - name: Build APK & AAB
         run: |
