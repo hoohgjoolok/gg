@@ -36,7 +36,7 @@ jobs:
       - name: Install Cordova CLI
         run: npm install -g cordova
 
-      # تنظيف المنصة القديمة لتجنب أي تعارضات
+      # تنظيف منصة أندرويد لتجنب بقايا البناء السابق
       - name: Clean Android Platform
         run: rm -rf platforms/android
 
@@ -52,12 +52,16 @@ jobs:
           cordova plugin add cordova-plugin-background-mode
           cordova plugin add cordova-plugin-doze-optimize
 
-      # إصلاح android:exported تلقائياً في AndroidManifest.xml
-      - name: Patch AndroidManifest.xml for Android 12+
+      # إصلاح التكرارات وإضافة android:exported
+      - name: Patch AndroidManifest.xml
         run: |
           MANIFEST="platforms/android/app/src/main/AndroidManifest.xml"
           if [ -f "$MANIFEST" ]; then
-            echo "🔧 Adding android:exported to autostart receivers..."
+            echo "🔧 Removing duplicated autostart receivers..."
+            # حذف أي تكرار لـ BootCompletedReceiver
+            awk '!seen[$0]++' $MANIFEST > $MANIFEST.tmp && mv $MANIFEST.tmp $MANIFEST
+
+            echo "🔧 Adding android:exported attribute..."
             sed -i '/BootCompletedReceiver/ {/android:exported=/! s/<receiver /<receiver android:exported="true" /}' $MANIFEST
             sed -i '/UserPresentReceiver/ {/android:exported=/! s/<receiver /<receiver android:exported="true" /}' $MANIFEST
             sed -i '/PackageReplacedReceiver/ {/android:exported=/! s/<receiver /<receiver android:exported="true" /}' $MANIFEST
