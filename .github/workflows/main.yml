@@ -24,8 +24,15 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Install Cordova CLI
-        run: npm install -g cordova
+      - name: Install Java 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install Cordova & Cordova-Fetch
+        run: |
+          npm install -g cordova cordova-fetch
 
       - name: Clean Old Platforms & Plugins Cache
         run: |
@@ -33,6 +40,19 @@ jobs:
           rm -rf plugins
           rm -rf node_modules
           npm cache clean --force
+
+      - name: Set up Android SDK
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openjdk-17-jdk
+          sudo apt-get install -y wget unzip
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+          mkdir -p $HOME/android-sdk/cmdline-tools
+          unzip -q commandlinetools-linux-9477386_latest.zip -d $HOME/android-sdk/cmdline-tools
+          yes | $HOME/android-sdk/cmdline-tools/cmdline-tools/bin/sdkmanager --licenses
+          $HOME/android-sdk/cmdline-tools/cmdline-tools/bin/sdkmanager --install "platform-tools" "build-tools;34.0.0" "platforms;android-34"
+          echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
+          echo "$HOME/android-sdk/platform-tools" >> $GITHUB_PATH
 
       - name: Add Android Platform
         run: cordova platform add android@12.0.0
@@ -42,7 +62,7 @@ jobs:
           cordova plugin add cordova-plugin-foreground-service
           cordova plugin add cordova-plugin-autostart
           cordova plugin add cordova-plugin-background-mode
-          cordova plugin add https://github.com/boltex/cordova-plugin-battery-optimization.git
+          cordova plugin add https://github.com/boltex/cordova-plugin-battery-optimization --fetch
           cordova plugin add cordova-plugin-android-permissions
           cordova plugin add cordova-sms-plugin
 
