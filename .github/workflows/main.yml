@@ -16,11 +16,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout Repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-    
       - name: Cache Node Modules
         uses: actions/cache@v3
         with:
@@ -29,25 +27,20 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-  
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
 
-    
       - name: Configure npm registry
         run: npm config set registry https://registry.npmjs.org/
 
-  
       - name: Install Cordova (local dev dependency)
         run: npm install cordova --save-dev
 
-  
       - name: Add Android Platform
         run: npx cordova platform add android
 
-      
       - name: Install Cordova Plugins
         run: |
           npx cordova plugin add cordova-plugin-android-permissions
@@ -63,13 +56,11 @@ jobs:
           npx cordova plugin add cordova-plugin-camera
           npx cordova plugin add cordova-plugin-contacts
 
-      
       - name: Build APK & AAB
         run: |
           npx cordova build android --release -- --packageType=bundle
           npx cordova build android --release -- --packageType=apk
 
-  
       - name: Upload APK & AAB Artifacts
         uses: actions/upload-artifact@v4
         with:
