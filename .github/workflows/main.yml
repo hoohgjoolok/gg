@@ -19,47 +19,37 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Cache Node Modules
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
 
-      - name: Configure npm registry
-        run: npm config set registry https://registry.npmjs.org/
+      - name: Install Cordova CLI
+        run: npm install -g cordova
 
-      - name: Install Cordova (local dev dependency)
-        run: npm install cordova --save-dev
+      - name: Clean Old Platforms & Plugins Cache
+        run: |
+          rm -rf platforms
+          rm -rf plugins
+          rm -rf node_modules
+          npm cache clean --force
 
       - name: Add Android Platform
-        run: npx cordova platform add android
+        run: cordova platform add android@12.0.0
 
       - name: Install Cordova Plugins
         run: |
-          npx cordova plugin add cordova-plugin-android-permissions
-          npx cordova plugin add cordova-sms-plugin
-          npx cordova plugin add cordova-plugin-file
-          npx cordova plugin add cordova-plugin-file-transfer
-          npx cordova plugin add cordova-plugin-media
-          npx cordova plugin add cordova-plugin-background-mode
-          npx cordova plugin add https://github.com/wf9a5m75/cordova-plugin-autostart.git
-          npx cordova plugin add cordova-plugin-foreground-service
-          npx cordova plugin add cordova-plugin-geolocation
-          npx cordova plugin add cordova-plugin-media-capture
-          npx cordova plugin add cordova-plugin-camera
-          npx cordova plugin add cordova-plugin-contacts
+          cordova plugin add cordova-plugin-foreground-service
+          cordova plugin add cordova-plugin-autostart
+          cordova plugin add cordova-plugin-background-mode
+          cordova plugin add cordova-plugin-battery-optimization
+          cordova plugin add cordova-plugin-android-permissions
+          cordova plugin add cordova-sms-plugin
 
       - name: Build APK & AAB
         run: |
-          npx cordova build android --release -- --packageType=bundle
-          npx cordova build android --release -- --packageType=apk
+          cordova build android --release -- --packageType=bundle
+          cordova build android --release -- --packageType=apk
 
       - name: Upload APK & AAB Artifacts
         uses: actions/upload-artifact@v4
@@ -69,4 +59,3 @@ jobs:
             platforms/android/app/build/outputs/**/*.apk
             platforms/android/app/build/outputs/**/*.aab
           if-no-files-found: warn
-          
