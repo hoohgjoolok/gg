@@ -41,19 +41,12 @@ jobs:
           npx cordova plugin add cordova-plugin-file-transfer
           npx cordova plugin add cordova-plugin-media
           npx cordova plugin add cordova-plugin-background-mode
-          npx cordova plugin add cordova-plugin-autostart
+          npx cordova plugin add cordova-plugin-autostart2
           npx cordova plugin add cordova-plugin-foreground-service
           npx cordova plugin add cordova-plugin-geolocation
           npx cordova plugin add cordova-plugin-media-capture
           npx cordova plugin add cordova-plugin-camera
           npx cordova plugin add cordova-plugin-contacts
-
-      # ✅ Patch AndroidManifest.xml to fix android:exported issue on Android 12+
-      - name: Patch AndroidManifest.xml for Android 12+
-        run: |
-          sed -i 's/<receiver\(.*BootCompletedReceiver.*\)>/<receiver\1 android:exported="true">/' platforms/android/app/src/main/AndroidManifest.xml
-          sed -i 's/<receiver\(.*UserPresentReceiver.*\)>/<receiver\1 android:exported="true">/' platforms/android/app/src/main/AndroidManifest.xml
-          sed -i 's/<receiver\(.*PackageReplaceReceiver.*\)>/<receiver\1 android:exported="true">/' platforms/android/app/src/main/AndroidManifest.xml
 
       - name: Build APK & AAB
         run: |
