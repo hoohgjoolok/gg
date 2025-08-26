@@ -24,22 +24,32 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Set up Java (JDK 11)   # Cordova/Gradle يحتاج JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '11'
-
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Install Cordova CLI
         run: npm install -g cordova
 
-      - name: Add Android Platform
+  
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+
+      - name: Install Android SDK & Tools
         run: |
-          cordova platform remove android || true
-          cordova platform add android@latest
+          sudo apt-get update
+          sudo apt-get install -y openjdk-17-jdk wget unzip
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmd-tools.zip
+          mkdir -p $HOME/android-sdk/cmdline-tools
+          unzip cmd-tools.zip -d $HOME/android-sdk/cmdline-tools
+          mv $HOME/android-sdk/cmdline-tools/cmdline-tools $HOME/android-sdk/cmdline-tools/latest
+          export ANDROID_HOME=$HOME/android-sdk
+          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
+          yes | sdkmanager --sdk_root=$ANDROID_HOME --licenses
+          sdkmanager --sdk_root=$ANDROID_HOME "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+
+      - name: Add Android Platform
+        run: cordova platform add android
 
       - name: Install Cordova Plugins
         run: |
@@ -52,6 +62,8 @@ jobs:
 
       - name: Build APK & AAB
         run: |
+          export ANDROID_HOME=$HOME/android-sdk
+          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
           cordova build android --release -- --packageType=bundle
           cordova build android --release -- --packageType=apk
 
