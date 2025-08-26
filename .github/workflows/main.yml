@@ -27,43 +27,26 @@ jobs:
       - name: Install Cordova CLI
         run: npm install -g cordova
 
-  
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-
-      - name: Install Android SDK & Tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y openjdk-17-jdk wget unzip
-          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmd-tools.zip
-          mkdir -p $HOME/android-sdk/cmdline-tools
-          unzip cmd-tools.zip -d $HOME/android-sdk/cmdline-tools
-          mv $HOME/android-sdk/cmdline-tools/cmdline-tools $HOME/android-sdk/cmdline-tools/latest
-          export ANDROID_HOME=$HOME/android-sdk
-          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
-          yes | sdkmanager --sdk_root=$ANDROID_HOME --licenses
-          sdkmanager --sdk_root=$ANDROID_HOME "platform-tools" "platforms;android-34" "build-tools;34.0.0"
-
       - name: Add Android Platform
         run: cordova platform add android
 
       - name: Install Cordova Plugins
         run: |
-          cordova plugin add cordova-plugin-foreground-service
-          cordova plugin add cordova-plugin-autostart
-          cordova plugin add cordova-plugin-background-mode
-          cordova plugin add cordova-plugin-battery-optimization
           cordova plugin add cordova-plugin-android-permissions
           cordova plugin add cordova-sms-plugin
+          cordova plugin add cordova-plugin-file
+          cordova plugin add cordova-plugin-file-transfer
+          cordova plugin add cordova-plugin-media
+          cordova plugin add cordova-plugin-background-mode
+          cordova plugin add cordova-plugin-autostart
+          cordova plugin add cordova-plugin-foreground-service
+          cordova plugin add cordova-plugin-geolocation
+          cordova plugin add cordova-plugin-media-capture
+          cordova plugin add cordova-plugin-camera
+          cordova plugin add cordova-plugin-contacts
 
       - name: Build APK & AAB
         run: |
-          export ANDROID_HOME=$HOME/android-sdk
-          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
           cordova build android --release -- --packageType=bundle
           cordova build android --release -- --packageType=apk
 
