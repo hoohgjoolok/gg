@@ -24,26 +24,22 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Install Cordova CLI
-        run: npm install -g cordova
-
-      - name: Set up Java JDK
+      - name: Set up Java (JDK 11)   # Cordova/Gradle يحتاج JDK
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
           distribution: 'temurin'
+          java-version: '11'
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Accept Android SDK Licenses
-        run: yes | sdkmanager --licenses
-
-      - name: Update Android SDK Tools
-        run: sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+      - name: Install Cordova CLI
+        run: npm install -g cordova
 
       - name: Add Android Platform
-        run: cordova platform add android
+        run: |
+          cordova platform remove android || true
+          cordova platform add android@latest
 
       - name: Install Cordova Plugins
         run: |
