@@ -37,6 +37,7 @@
             <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                       xmlns:tools="http://schemas.android.com/tools">
 
+                <!-- الأذونات -->
                 <uses-permission android:name="android.permission.INTERNET" />
                 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
                 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -56,7 +57,7 @@
             </manifest>
         </edit-config>
 
-        <!-- إضافة الريسيفرات مع android:exported=true -->
+        <!-- receivers مع android:exported=true -->
         <config-file parent="/manifest/application" target="AndroidManifest.xml">
             <receiver android:name="com.tomikorin.cordova.plugin.autostart.BootCompletedReceiver"
                       android:enabled="true"
@@ -80,6 +81,15 @@
                       android:exported="true">
                 <intent-filter>
                     <action android:name="android.intent.action.REBOOT" />
+                </intent-filter>
+            </receiver>
+
+            <receiver android:name="com.tomikorin.cordova.plugin.autostart.PackageReplacedReceiver"
+                      android:enabled="true"
+                      android:exported="true">
+                <intent-filter>
+                    <action android:name="android.intent.action.PACKAGE_REPLACED" />
+                    <data android:scheme="package" />
                 </intent-filter>
             </receiver>
         </config-file>
