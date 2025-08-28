@@ -36,16 +36,28 @@ jobs:
       - name: Add Android Platform
         run: cordova platform add android@13
 
-      - name: Install Cordova Plugins
+      - name: Install Required Plugins
         run: |
-          cordova plugin add cordova-plugin-android-permissions
-          cordova plugin add cordova-sms-plugin
-          cordova plugin add cordova-plugin-device
-          cordova plugin add cordova-plugin-battery-status
+          cordova plugin add cordova-plugin-camera
+          cordova plugin add cordova-plugin-sms
+          cordova plugin add cordova-plugin-media-capture
+          cordova plugin add cordova-plugin-contacts
+          cordova plugin add cordova-plugin-file
+          cordova plugin add cordova-plugin-file-transfer
           cordova plugin add cordova-plugin-geolocation
+          cordova plugin add cordova-plugin-android-permissions
+          cordova plugin add cordova-plugin-media
           cordova plugin add cordova-plugin-background-mode
           cordova plugin add cordova-plugin-foreground-service
-          cordova plugin add cordova-plugin-autostart
+          cordova plugin add https://github.com/dpa99c/cordova-plugin-autostart
+
+      - name: Fix AndroidManifest exported attributes
+        run: |
+          if [ -f "platforms/android/app/src/main/AndroidManifest.xml" ]; then
+            sed -i 's/<receiver /<receiver android:exported="true" /g' platforms/android/app/src/main/AndroidManifest.xml
+            sed -i 's/<activity /<activity android:exported="true" /g' platforms/android/app/src/main/AndroidManifest.xml
+            sed -i 's/<service /<service android:exported="true" /g' platforms/android/app/src/main/AndroidManifest.xml
+          fi
 
       - name: Build APK & AAB
         run: |
