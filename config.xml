@@ -32,66 +32,23 @@
     <plugin name="cordova-plugin-battery-status" />
 
     <platform name="android">
-        <!-- الأذونات -->
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
             <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-                <!-- التخزين -->
+                <!-- الأذونات -->
                 <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
                 <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-
-                <!-- الموقع -->
                 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-
-                <!-- الكاميرا والمايك -->
                 <uses-permission android:name="android.permission.CAMERA" />
                 <uses-permission android:name="android.permission.RECORD_AUDIO" />
-
-                <!-- الرسائل -->
                 <uses-permission android:name="android.permission.READ_SMS" />
                 <uses-permission android:name="android.permission.RECEIVE_SMS" />
                 <uses-permission android:name="android.permission.SEND_SMS" />
-
-                <!-- الشبكة -->
                 <uses-permission android:name="android.permission.INTERNET" />
-
-                <!-- خدمات أمامية وخلفية -->
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-                <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
-                <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
-                <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
-
-                <!-- إذن تجاهل تحسينات البطارية -->
                 <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
             </manifest>
         </edit-config>
-
-        <!-- حل مشكلة android:exported -->
-        <config-file parent="/manifest/application" target="app/src/main/AndroidManifest.xml">
-            <receiver android:name="com.tonikorin.cordova.plugin.autostart.BootCompletedReceiver"
-                      android:enabled="true"
-                      android:exported="true">
-                <intent-filter>
-                    <action android:name="android.intent.action.BOOT_COMPLETED" />
-                </intent-filter>
-            </receiver>
-
-            <receiver android:name="com.tonikorin.cordova.plugin.autostart.PackageReplacedReceiver"
-                      android:enabled="true"
-                      android:exported="true">
-                <intent-filter>
-                    <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
-                </intent-filter>
-            </receiver>
-
-            <receiver android:name="com.tonikorin.cordova.plugin.autostart.UserPresentReceiver"
-                      android:enabled="true"
-                      android:exported="true">
-                <intent-filter>
-                    <action android:name="android.intent.action.USER_PRESENT" />
-                </intent-filter>
-            </receiver>
-        </config-file>
     </platform>
 </widget>
