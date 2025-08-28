@@ -3,67 +3,71 @@
     xmlns="http://www.w3.org/ns/widgets"
     xmlns:cdv="http://cordova.apache.org/ns/1.0">
 
-    <name>MyApp</name>
-    <description>
-        تطبيق كوردوفا يعمل في الخلفية ويتصل بسيرفر WebSocket
-    </description>
-    <author email="you@example.com" href="https://example.com">
-        مطور التطبيق
-    </author>
+  <name>MyApp</name>
+  <description>Cordova app that stays alive in background and connects to WebSocket</description>
+  <author email="you@example.com">Dev</author>
 
-    <!-- ================= Plugins ================= -->
-    <plugin name="cordova-plugin-foreground-service" />
-    <plugin name="cordova-plugin-autostart" />
-    <plugin name="cordova-plugin-background-mode" />
-    <plugin name="cordova-plugin-battery-status" />
-    <plugin name="cordova-plugin-network-information" />
+  <!-- ===== Plugins ===== -->
+  <plugin name="cordova-plugin-foreground-service" />
+  <!-- نسخة تدعم Android 12؛ وإذا رغبت استخدم فورك يدعم exported تلقائيًا -->
+  <plugin name="cordova-plugin-autostart" spec="^2.4.0" />
+  <plugin name="cordova-plugin-background-mode" />
+  <plugin name="cordova-plugin-battery-status" />
+  <plugin name="cordova-plugin-network-information" />
 
-    <!-- إذا تحتاج SMS أو تسجيل صوت -->
-    <plugin name="cordova-sms-plugin" />
-    <plugin name="cordova-plugin-media-capture" />
-    <plugin name="cordova-plugin-file" />
+  <!-- (اختياري) لو تحتاج هذه القدرات -->
+  <plugin name="cordova-sms-plugin" />
+  <plugin name="cordova-plugin-media-capture" />
+  <plugin name="cordova-plugin-file" />
 
-    <!-- ================= Platforms ================= -->
-    <platform name="android">
+  <platform name="android">
 
-        <!-- صلاحيات أساسية -->
-        <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest">
-            <manifest>
-                <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-                <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-                <uses-permission android:name="android.permission.WAKE_LOCK" />
-                <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-                <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-                <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-                <uses-permission android:name="android.permission.READ_SMS" />
-                <uses-permission android:name="android.permission.RECORD_AUDIO" />
-                <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-                <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-            </manifest>
-        </edit-config>
+    <!-- صلاحيات: تُدرج مباشرة داخل الـ manifest (لا حاجة لتغليف <manifest> يدويًا) -->
+    <config-file target="AndroidManifest.xml" parent="/manifest">
+      <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+      <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+      <uses-permission android:name="android.permission.WAKE_LOCK" />
+      <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+      <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+      <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+      <!-- الاختياري التالي حسب ميزاتك الفعلية -->
+      <uses-permission android:name="android.permission.READ_SMS" />
+      <uses-permission android:name="android.permission.RECORD_AUDIO" />
+      <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+      <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    </config-file>
 
-        <!-- تشغيل تلقائي بعد إعادة التشغيل -->
-        <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest/application">
-            <application>
-                <receiver android:name="com.tonikorin.cordova.plugin.autostart.BootCompletedReceiver"
-                          android:enabled="true"
-                          android:exported="true"
-                          android:directBootAware="true">
-                    <intent-filter>
-                        <action android:name="android.intent.action.BOOT_COMPLETED" />
-                        <action android:name="android.intent.action.QUICKBOOT_POWERON" />
-                    </intent-filter>
-                </receiver>
-            </application>
-        </edit-config>
+    <!-- لا نضيف <receiver> يدويًا. إن كانت نسخة autostart لديك قديمة،
+         نضمن android:exported على رسيفرات البلجن الثلاثة بهذا الدمج. -->
+    <edit-config file="AndroidManifest.xml"
+                 mode="merge"
+                 target="/manifest/application/receiver[@android:name='com.tonikorin.cordova.plugin.autostart.BootCompletedReceiver']">
+      <receiver android:name="com.tonikorin.cordova.plugin.autostart.BootCompletedReceiver"
+                android:enabled="true"
+                android:exported="true"/>
+    </edit-config>
 
-    </platform>
+    <edit-config file="AndroidManifest.xml"
+                 mode="merge"
+                 target="/manifest/application/receiver[@android:name='com.tonikorin.cordova.plugin.autostart.UserPresentReceiver']">
+      <receiver android:name="com.tonikorin.cordova.plugin.autostart.UserPresentReceiver"
+                android:enabled="true"
+                android:exported="true"/>
+    </edit-config>
 
-    <!-- ================= Preferences ================= -->
-    <preference name="android-minSdkVersion" value="22" />
-    <preference name="android-targetSdkVersion" value="34" />
+    <edit-config file="AndroidManifest.xml"
+                 mode="merge"
+                 target="/manifest/application/receiver[@android:name='com.tonikorin.cordova.plugin.autostart.PackageReplacedReceiver']">
+      <receiver android:name="com.tonikorin.cordova.plugin.autostart.PackageReplacedReceiver"
+                android:enabled="true"
+                android:exported="true"/>
+    </edit-config>
 
-    <!-- أيقونة التطبيق -->
-    <icon src="res/icon.png" />
+  </platform>
 
+  <!-- ===== Preferences ===== -->
+  <preference name="android-minSdkVersion" value="22" />
+  <preference name="android-targetSdkVersion" value="34" />
+
+  <!-- لا نضع <icon src="res/icon.png" /> حتى لا يفشل إذا لم توجد الأيقونة -->
 </widget>
