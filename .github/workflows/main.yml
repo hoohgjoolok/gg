@@ -31,9 +31,10 @@ jobs:
 
       - name: Install Cordova CLI
         run: npm install -g cordova
-
-      - name: Add Android Platform
-        run: cordova platform add android
+      - name: Reset Android Platform
+        run: |
+          cordova platform rm android || true
+          cordova platform add android
 
       - name: Prepare (sync plugins & platforms)
         run: cordova prepare android
