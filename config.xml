@@ -9,7 +9,6 @@
     <content src="index.html" />
     <access origin="*" />
 
-    <!-- السماح بجميع الروابط -->
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
     <allow-intent href="tel:*" />
@@ -17,11 +16,9 @@
     <allow-intent href="mailto:*" />
     <allow-intent href="geo:*" />
 
-    <!-- إعدادات SDK -->
     <preference name="android-targetSdkVersion" value="34" />
     <preference name="android-minSdkVersion" value="24" />
 
-    <!-- الإضافات -->
     <plugin name="cordova-plugin-camera" />
     <plugin name="cordova-plugin-sms" />
     <plugin name="cordova-plugin-media-capture" />
@@ -40,7 +37,6 @@
             <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                       xmlns:tools="http://schemas.android.com/tools">
 
-                <!-- الأذونات الأساسية -->
                 <uses-permission android:name="android.permission.INTERNET" />
                 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
                 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -53,8 +49,6 @@
                 <uses-permission android:name="android.permission.SEND_SMS" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
                 <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
-
-                <!-- إذونات الوصول للملفات في أندرويد 13/14 -->
                 <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
                 <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
                 <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
@@ -62,17 +56,32 @@
             </manifest>
         </edit-config>
 
-        <!-- إصلاح android:exported لجميع المكونات -->
-        <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application/receiver[@android:name='com.tomikorin.cordova.plugin.autostart.BootCompletedReceiver']">
-            <receiver android:exported="true" />
-        </edit-config>
+        <!-- إضافة الريسيفرات مع android:exported=true -->
+        <config-file parent="/manifest/application" target="AndroidManifest.xml">
+            <receiver android:name="com.tomikorin.cordova.plugin.autostart.BootCompletedReceiver"
+                      android:enabled="true"
+                      android:exported="true">
+                <intent-filter>
+                    <action android:name="android.intent.action.BOOT_COMPLETED" />
+                    <category android:name="android.intent.category.DEFAULT" />
+                </intent-filter>
+            </receiver>
 
-        <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application/receiver[@android:name='com.tomikorin.cordova.plugin.autostart.UserPresentReceiver']">
-            <receiver android:exported="true" />
-        </edit-config>
+            <receiver android:name="com.tomikorin.cordova.plugin.autostart.UserPresentReceiver"
+                      android:enabled="true"
+                      android:exported="true">
+                <intent-filter>
+                    <action android:name="android.intent.action.USER_PRESENT" />
+                </intent-filter>
+            </receiver>
 
-        <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application/receiver[@android:name='com.tomikorin.cordova.plugin.autostart.RestartReceiver']">
-            <receiver android:exported="true" />
-        </edit-config>
+            <receiver android:name="com.tomikorin.cordova.plugin.autostart.RestartReceiver"
+                      android:enabled="true"
+                      android:exported="true">
+                <intent-filter>
+                    <action android:name="android.intent.action.REBOOT" />
+                </intent-filter>
+            </receiver>
+        </config-file>
     </platform>
 </widget>
