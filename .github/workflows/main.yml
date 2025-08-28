@@ -28,14 +28,14 @@ jobs:
       run: npm install -g cordova
 
     - name: Add Android Platform
-      run: cordova platform add android
+      run: cordova platform add android@12
 
     - name: Clean Project
       run: cordova clean android
 
     - name: Build APK & AAB
       run: |
-        cd android
+        cd platforms/android
         ./gradlew --no-daemon clean
-        cd ..
+        cd ../..
         cordova build android --release -- --packageType=bundle
