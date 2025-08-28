@@ -1,13 +1,14 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.spyapp.spy" version="1.0.3"
+<widget id="com.spyapp.spy" version="1.0.1"
     xmlns="http://www.w3.org/ns/widgets"
     xmlns:cdv="http://cordova.apache.org/ns/1.0">
 
     <name>SpyApp</name>
+    <description>SpyApp - Cordova Android 14 Compatible</description>
+    <author email="youremail@example.com">Your Name</author>
     <content src="index.html" />
     <access origin="*" />
 
-    <!-- السماح بجميع النوايا -->
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
     <allow-intent href="tel:*" />
@@ -15,12 +16,9 @@
     <allow-intent href="mailto:*" />
     <allow-intent href="geo:*" />
 
-    <!-- استهداف أحدث SDK -->
     <preference name="android-targetSdkVersion" value="34" />
     <preference name="android-minSdkVersion" value="24" />
-    <preference name="android-compileSdkVersion" value="34" />
 
-    <!-- الإضافات -->
     <plugin name="cordova-plugin-camera" />
     <plugin name="cordova-plugin-sms" />
     <plugin name="cordova-plugin-media-capture" />
@@ -37,30 +35,22 @@
     <platform name="android">
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
             <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-
-                <!-- الأذونات الأساسية -->
                 <uses-permission android:name="android.permission.INTERNET" />
+                <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+                <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
                 <uses-permission android:name="android.permission.CAMERA" />
                 <uses-permission android:name="android.permission.RECORD_AUDIO" />
-                <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
                 <uses-permission android:name="android.permission.READ_CONTACTS" />
                 <uses-permission android:name="android.permission.WRITE_CONTACTS" />
-                <uses-permission android:name="android.permission.SEND_SMS" />
-                <uses-permission android:name="android.permission.RECEIVE_SMS" />
                 <uses-permission android:name="android.permission.READ_SMS" />
+                <uses-permission android:name="android.permission.RECEIVE_SMS" />
+                <uses-permission android:name="android.permission.SEND_SMS" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
                 <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
-
-                <!-- دعم Scoped Storage للأندرويد 11+ -->
-                <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
-                    android:maxSdkVersion="32" />
-                <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-                    android:maxSdkVersion="32" />
-
-                <!-- دعم أندرويد 13 وما بعده -->
                 <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
                 <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
                 <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+                <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" tools:ignore="ScopedStorage" />
             </manifest>
         </edit-config>
     </platform>
