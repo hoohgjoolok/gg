@@ -46,10 +46,10 @@ jobs:
           cordova plugin add cordova-plugin-file-transfer
           cordova plugin add cordova-plugin-geolocation
           cordova plugin add cordova-plugin-android-permissions
-          cordova plugin add cordova-plugin-media
+          cordova plugin add cordova-plugin-media@5.0.4
+          cordova plugin add cordova-plugin-battery-status@2.0.3
           cordova plugin add cordova-plugin-background-mode
           cordova plugin add cordova-plugin-foreground-service
-          cordova plugin add cordova-plugin-battery-status
           cordova plugin add cordova-plugin-device
           cordova plugin add cordova-plugin-autostart
 
