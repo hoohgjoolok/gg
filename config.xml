@@ -1,3 +1,4 @@
+
 <?xml version='1.0' encoding='utf-8'?>
 <widget id="com.spyapp.spy" version="1.0.1"
     xmlns="http://www.w3.org/ns/widgets"
@@ -14,7 +15,6 @@
     <allow-intent href="mailto:*" />
     <allow-intent href="geo:*" />
 
-    <!-- تحديد مستوى SDK لدعم Android 12/13/14 -->
     <preference name="android-targetSdkVersion" value="34" />
 
     <!-- الإضافات (Plugins) -->
@@ -28,15 +28,8 @@
     <plugin name="cordova-plugin-android-permissions" />
     <plugin name="cordova-plugin-media" />
     <plugin name="cordova-plugin-background-mode" />
-    <plugin name="cordova-plugin-foreground-service" />
-    <plugin name="cordova-plugin-device" />
-    <plugin name="cordova-plugin-battery-status" />
-    <!-- استخدام النسخة المحدثة للبلجن -->
-    <plugin name="cordova-plugin-autostart" spec="https://github.com/dpa99c/cordova-plugin-autostart" />
 
     <platform name="android">
-
-        <!-- إضافة صلاحيات Android -->
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
             <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
@@ -68,33 +61,6 @@
                 <!-- إذن تجاهل تحسينات البطارية لتشغيل بالخلفية -->
                 <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
-                <!-- دعم بدء التشغيل التلقائي -->
-                <receiver
-                    android:name="com.tonikorin.cordova.plugin.autostart.BootCompletedReceiver"
-                    android:enabled="true"
-                    android:exported="true">
-                    <intent-filter>
-                        <action android:name="android.intent.action.BOOT_COMPLETED" />
-                    </intent-filter>
-                </receiver>
-
-                <receiver
-                    android:name="com.tonikorin.cordova.plugin.autostart.UserPresentReceiver"
-                    android:enabled="true"
-                    android:exported="true">
-                    <intent-filter>
-                        <action android:name="android.intent.action.USER_PRESENT" />
-                    </intent-filter>
-                </receiver>
-
-                <receiver
-                    android:name="com.tonikorin.cordova.plugin.autostart.PackageReplacedReceiver"
-                    android:enabled="true"
-                    android:exported="true">
-                    <intent-filter>
-                        <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
-                    </intent-filter>
-                </receiver>
             </manifest>
         </edit-config>
     </platform>
