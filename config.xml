@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.spyapp.spy" version="1.0.2"
+<widget id="com.spyapp.spy" version="1.0.3"
     xmlns="http://www.w3.org/ns/widgets"
     xmlns:cdv="http://cordova.apache.org/ns/1.0">
 
@@ -61,29 +61,7 @@
                 <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
                 <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
                 <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
-
             </manifest>
-        </edit-config>
-
-        <!-- تعديل android:exported تلقائياً -->
-        <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
-            <application>
-                <receiver
-                    android:name="com.tonikorin.cordova.plugin.autostart.BootCompletedReceiver"
-                    android:enabled="true"
-                    android:exported="true">
-                </receiver>
-                <receiver
-                    android:name="com.tonikorin.cordova.plugin.autostart.UserPresentReceiver"
-                    android:enabled="true"
-                    android:exported="true">
-                </receiver>
-                <receiver
-                    android:name="com.tonikorin.cordova.plugin.autostart.PackageReplacedReceiver"
-                    android:enabled="true"
-                    android:exported="true">
-                </receiver>
-            </application>
         </edit-config>
     </platform>
 </widget>
