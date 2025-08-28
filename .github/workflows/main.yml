@@ -34,6 +34,9 @@ jobs:
         run: |
           cordova plugin add cordova-plugin-android-permissions
           cordova plugin add cordova-sms-plugin
+          cordova plugin add cordova-plugin-foreground-service
+          cordova plugin add cordova-plugin-autostart
+          cordova plugin add cordova-plugin-battery-status
 
       - name: Build APK & AAB
         run: |
