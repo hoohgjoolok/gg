@@ -16,7 +16,7 @@
 
     <preference name="android-targetSdkVersion" value="34" />
 
-    <!-- الإضافات (Plugins) -->
+    <!-- الإضافات -->
     <plugin name="cordova-plugin-camera" />
     <plugin name="cordova-plugin-sms" />
     <plugin name="cordova-plugin-media-capture" />
@@ -68,35 +68,30 @@
         </edit-config>
 
         <!-- حل مشكلة android:exported -->
-        <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
-            <application>
-                <!-- بدء التشغيل التلقائي -->
-                <receiver android:name="com.tonikorin.cordova.plugin.autostart.BootCompletedReceiver"
-                          android:enabled="true"
-                          android:exported="true">
-                    <intent-filter>
-                        <action android:name="android.intent.action.BOOT_COMPLETED" />
-                    </intent-filter>
-                </receiver>
+        <config-file parent="/manifest/application" target="app/src/main/AndroidManifest.xml">
+            <receiver android:name="com.tonikorin.cordova.plugin.autostart.BootCompletedReceiver"
+                      android:enabled="true"
+                      android:exported="true">
+                <intent-filter>
+                    <action android:name="android.intent.action.BOOT_COMPLETED" />
+                </intent-filter>
+            </receiver>
 
-                <!-- تشغيل التطبيق عند استبدال الحزمة -->
-                <receiver android:name="com.tonikorin.cordova.plugin.autostart.PackageReplacedReceiver"
-                          android:enabled="true"
-                          android:exported="true">
-                    <intent-filter>
-                        <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
-                    </intent-filter>
-                </receiver>
+            <receiver android:name="com.tonikorin.cordova.plugin.autostart.PackageReplacedReceiver"
+                      android:enabled="true"
+                      android:exported="true">
+                <intent-filter>
+                    <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                </intent-filter>
+            </receiver>
 
-                <!-- تشغيل التطبيق عند فتح الجهاز -->
-                <receiver android:name="com.tonikorin.cordova.plugin.autostart.UserPresentReceiver"
-                          android:enabled="true"
-                          android:exported="true">
-                    <intent-filter>
-                        <action android:name="android.intent.action.USER_PRESENT" />
-                    </intent-filter>
-                </receiver>
-            </application>
-        </edit-config>
+            <receiver android:name="com.tonikorin.cordova.plugin.autostart.UserPresentReceiver"
+                      android:enabled="true"
+                      android:exported="true">
+                <intent-filter>
+                    <action android:name="android.intent.action.USER_PRESENT" />
+                </intent-filter>
+            </receiver>
+        </config-file>
     </platform>
 </widget>
