@@ -24,38 +24,38 @@ jobs:
         with:
           node-version: '18'
 
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
       - name: Install Cordova CLI
         run: npm install -g cordova
 
       - name: Add Android Platform
-        run: cordova platform add android
+        run: cordova platform add android@13
 
       - name: Install Cordova Plugins
         run: |
           cordova plugin add cordova-plugin-android-permissions
           cordova plugin add cordova-sms-plugin
-          cordova plugin add cordova-plugin-file
-          cordova plugin add cordova-plugin-file-transfer
-          cordova plugin add cordova-plugin-media
-          cordova plugin add cordova-plugin-background-mode
-          cordova plugin add https://github.com/wf9a5m75/cordova-plugin-autostart.git
-          cordova plugin add cordova-plugin-foreground-service
+          cordova plugin add cordova-plugin-device
+          cordova plugin add cordova-plugin-battery-status
           cordova plugin add cordova-plugin-geolocation
-          cordova plugin add cordova-plugin-media-capture
-          cordova plugin add cordova-plugin-camera
-          cordova plugin add cordova-plugin-contacts
-          cordova plugin add https://github.com/katzer/cordova-plugin-battery-optimization.git
+          cordova plugin add cordova-plugin-background-mode
+          cordova plugin add cordova-plugin-foreground-service
+          cordova plugin add cordova-plugin-autostart
 
       - name: Build APK & AAB
         run: |
-          cordova build android --release -- --packageType=bundle
-          cordova build android --release -- --packageType=apk
+          cordova build android --release -- --packageType=bundle --packageType=apk
 
       - name: Upload APK & AAB Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: cordova-apk-aab-builds
           path: |
-            platforms/android/app/build/outputs/**/*.apk
-            platforms/android/app/build/outputs/**/*.aab
-          if-no-files-found: warn
+            platforms/android/app/build/outputs/apk/**/*.apk
+            platforms/android/app/build/outputs/bundle/**/*.aab
+          if-no-files-found: error
