@@ -38,20 +38,20 @@ jobs:
 
       - name: Install Required Plugins
         run: |
-          cordova plugin add cordova-plugin-camera
-          cordova plugin add cordova-plugin-sms
-          cordova plugin add cordova-plugin-media-capture
-          cordova plugin add cordova-plugin-contacts
-          cordova plugin add cordova-plugin-file
-          cordova plugin add cordova-plugin-file-transfer
-          cordova plugin add cordova-plugin-geolocation
-          cordova plugin add cordova-plugin-android-permissions
+          cordova plugin add cordova-plugin-camera@6.0.0
           cordova plugin add cordova-plugin-media@5.0.4
+          cordova plugin add cordova-plugin-media-capture@3.0.3
+          cordova plugin add cordova-plugin-geolocation@5.0.0
           cordova plugin add cordova-plugin-battery-status@2.0.3
           cordova plugin add cordova-plugin-background-mode
           cordova plugin add cordova-plugin-foreground-service
           cordova plugin add cordova-plugin-device
           cordova plugin add cordova-plugin-autostart
+          cordova plugin add cordova-plugin-android-permissions
+          cordova plugin add cordova-plugin-file
+          cordova plugin add cordova-plugin-file-transfer
+          cordova plugin add cordova-plugin-sms
+          cordova plugin add cordova-plugin-contacts
 
       - name: Fix AndroidManifest exported attributes
         run: |
