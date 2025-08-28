@@ -36,11 +36,10 @@
     <plugin name="cordova-plugin-battery-status" />
 
     <platform name="android">
+        <!-- الصلاحيات المطلوبة -->
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
             <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                       xmlns:tools="http://schemas.android.com/tools">
-
-                <!-- الأذونات -->
                 <uses-permission android:name="android.permission.INTERNET" />
                 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
                 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -61,11 +60,9 @@
             </manifest>
         </edit-config>
 
-        <!-- تشغيل التطبيق تلقائياً عند إعادة التشغيل -->
+        <!-- استقبال حدث إعادة التشغيل -->
         <config-file parent="/manifest/application" target="AndroidManifest.xml">
-            <receiver android:name="com.YourApp.BootReceiver"
-                      android:enabled="true"
-                      android:exported="true">
+            <receiver android:enabled="true" android:exported="true">
                 <intent-filter>
                     <action android:name="android.intent.action.BOOT_COMPLETED" />
                 </intent-filter>
