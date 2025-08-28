@@ -17,7 +17,7 @@
     <allow-intent href="mailto:*" />
     <allow-intent href="geo:*" />
 
-    <!-- تهيئة SDK -->
+    <!-- إعدادات SDK -->
     <preference name="android-targetSdkVersion" value="34" />
     <preference name="android-minSdkVersion" value="24" />
 
@@ -40,7 +40,7 @@
             <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                       xmlns:tools="http://schemas.android.com/tools">
 
-                <!-- الأذونات الأساسية -->
+                <!-- الأذونات -->
                 <uses-permission android:name="android.permission.INTERNET" />
                 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
                 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -61,11 +61,11 @@
             </manifest>
         </edit-config>
 
-        <!-- تشغيل التطبيق تلقائياً بعد إعادة تشغيل الجهاز -->
+        <!-- تشغيل التطبيق تلقائياً عند إعادة التشغيل -->
         <config-file parent="/manifest/application" target="AndroidManifest.xml">
-            <receiver android:enabled="true"
-                      android:exported="true"
-                      android:directBootAware="true">
+            <receiver android:name="com.YourApp.BootReceiver"
+                      android:enabled="true"
+                      android:exported="true">
                 <intent-filter>
                     <action android:name="android.intent.action.BOOT_COMPLETED" />
                 </intent-filter>
