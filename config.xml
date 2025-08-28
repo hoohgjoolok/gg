@@ -9,6 +9,7 @@
     <content src="index.html" />
     <access origin="*" />
 
+    <!-- السماح بجميع الروابط -->
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
     <allow-intent href="tel:*" />
@@ -16,9 +17,11 @@
     <allow-intent href="mailto:*" />
     <allow-intent href="geo:*" />
 
+    <!-- إعدادات SDK -->
     <preference name="android-targetSdkVersion" value="34" />
     <preference name="android-minSdkVersion" value="24" />
 
+    <!-- الإضافات -->
     <plugin name="cordova-plugin-camera" />
     <plugin name="cordova-plugin-sms" />
     <plugin name="cordova-plugin-media-capture" />
@@ -34,7 +37,11 @@
 
     <platform name="android">
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
-            <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+            <!-- إضافة tools namespace لحل مشكلة XMLStreamException -->
+            <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                      xmlns:tools="http://schemas.android.com/tools">
+
+                <!-- الأذونات الأساسية -->
                 <uses-permission android:name="android.permission.INTERNET" />
                 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
                 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -47,10 +54,13 @@
                 <uses-permission android:name="android.permission.SEND_SMS" />
                 <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
                 <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
+                <!-- إذونات الوصول للملفات في أندرويد 13/14 -->
                 <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
                 <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
                 <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
                 <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" tools:ignore="ScopedStorage" />
+
             </manifest>
         </edit-config>
     </platform>
