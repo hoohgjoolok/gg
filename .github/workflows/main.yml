@@ -49,7 +49,9 @@ jobs:
           cordova plugin add cordova-plugin-media
           cordova plugin add cordova-plugin-background-mode
           cordova plugin add cordova-plugin-foreground-service
-          cordova plugin add https://github.com/dpa99c/cordova-plugin-autostart
+          cordova plugin add cordova-plugin-battery-status
+          cordova plugin add cordova-plugin-device
+          cordova plugin add cordova-plugin-autostart
 
       - name: Fix AndroidManifest exported attributes
         run: |
