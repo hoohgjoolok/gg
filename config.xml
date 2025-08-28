@@ -1,63 +1,41 @@
-<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.spyapp">
+<?xml version="1.0" encoding="UTF-8"?>
+<widget id="com.spyapp" version="1.0.0"
+    xmlns="http://www.w3.org/ns/widgets"
+    xmlns:cdv="http://cordova.apache.org/ns/1.0">
 
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.READ_SMS" />
-    <uses-permission android:name="android.permission.RECEIVE_SMS" />
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    <uses-permission android:name="android.permission.READ_CONTACTS" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
-        tools:ignore="ScopedStorage" />
+    <name>SpyApp</name>
+    <description>
+        SpyApp - Background WebSocket Control App
+    </description>
+    <author email="you@example.com" href="https://yourwebsite.com">
+        Your Name
+    </author>
 
-    <application
-        android:name=".MainApplication"
-        android:label="@string/app_name"
-        android:icon="@mipmap/ic_launcher"
-        android:usesCleartextTraffic="true"
-        android:allowBackup="true"
-        android:hardwareAccelerated="true"
-        android:requestLegacyExternalStorage="true">
+    <content src="index.html" />
 
-        <activity
-            android:name="MainActivity"
-            android:launchMode="singleTask"
-            android:label="@string/app_name"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|layoutDirection"
-            android:hardwareAccelerated="true"
-            android:windowSoftInputMode="adjustResize">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+    <allow-navigation href="*" />
+    <allow-intent href="*" />
 
-        <service
-            android:name=".ForegroundService"
-            android:enabled="true"
-            android:exported="true"
-            android:foregroundServiceType="location|dataSync|connectedDevice|mediaPlayback" />
+    <preference name="Fullscreen" value="true" />
+    <preference name="Orientation" value="portrait" />
+    <preference name="android-minSdkVersion" value="23" />
+    <preference name="android-targetSdkVersion" value="34" />
+    <preference name="AndroidPersistentFileLocation" value="Compatibility" />
+    <preference name="loadUrlTimeoutValue" value="700000" />
+    <preference name="AutoHideSplashScreen" value="true" />
+    <preference name="SplashScreenDelay" value="0" />
+    <preference name="ShowSplashScreenSpinner" value="false" />
 
-        <receiver
-            android:name="com.spyapp.BootReceiver"
-            android:enabled="true"
-            android:exported="true"
-            android:directBootAware="true">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
-            </intent-filter>
-        </receiver>
+    <platform name="android">
+        <allow-intent href="market:*" />
+        <allow-intent href="geo:*" />
+        <allow-intent href="tel:*" />
+        <allow-intent href="sms:*" />
+        <allow-intent href="mailto:*" />
 
-    </application>
+        <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
+            <application android:usesCleartextTraffic="true" />
+        </edit-config>
+    </platform>
 
-</manifest>
+</widget>
